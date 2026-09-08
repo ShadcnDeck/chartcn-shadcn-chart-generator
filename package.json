@@ -2,6 +2,16 @@
   "name": "shadcn-charts",
   "version": "0.1.0",
   "private": true,
+  "description": "Copy-paste shadcn/ui chart components generated from your own CSV data.",
+  "keywords": [
+    "shadcn",
+    "shadcn-ui",
+    "charts",
+    "recharts",
+    "nextjs",
+    "react",
+    "csv"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -10,6 +20,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@antfu/install-pkg": "^2.0.1",
     "@base-ui/react": "^1.6.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

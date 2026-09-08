@@ -1,17 +1,108 @@
 import Link from "next/link"
-import { AreaChart, BarChart3, LineChart, PieChart, Radar } from "lucide-react"
+import {
+  AreaChart,
+  BarChart3,
+  BookmarkCheck,
+  CalendarClock,
+  Copy,
+  FileCode2,
+  LayoutGrid,
+  LineChart,
+  Palette,
+  PieChart,
+  Radar,
+  Share2,
+  SlidersHorizontal,
+  Table2,
+} from "lucide-react"
 
 import { ChartPreview } from "@/components/chart-preview"
 import { CopyButton } from "@/components/copy-button"
 import { InteractiveGrid } from "@/components/interactive-grid"
 import { Reveal } from "@/components/reveal"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { parseCSV } from "@/lib/csv-parser"
+import { faqs } from "@/lib/faq"
 import { sampleCSV } from "@/lib/sample-data"
 
 const GITHUB_URL = "https://github.com/ShadcnDeck/chartcn"
+
+const features = [
+  {
+    icon: LayoutGrid,
+    title: "8 chart types built in",
+    description:
+      "Bar, Line, Area, Combo, Pie/Donut, Radar, Scatter, and Radial/Gauge, all ready to generate.",
+  },
+  {
+    icon: Table2,
+    title: "Paste, upload, or edit data",
+    description:
+      "Paste a CSV, upload a .csv file, or edit an inline table, whichever is fastest for your data.",
+  },
+  {
+    icon: SlidersHorizontal,
+    title: "Variant toggles per chart",
+    description:
+      "Switch between stacked or grouped bars, 100% stacking, smooth lines, or donut style.",
+  },
+  {
+    icon: CalendarClock,
+    title: "Automatic date axes",
+    description:
+      "Date columns get formatted axis ticks automatically, no manual date parsing.",
+  },
+  {
+    icon: Palette,
+    title: "Custom colors",
+    description:
+      "Customize series and category colors and see the change reflected in the copied code.",
+  },
+  {
+    icon: FileCode2,
+    title: "Two export modes",
+    description:
+      "Export with data baked in, or as a data prop you wire up to a live API or database.",
+  },
+  {
+    icon: Share2,
+    title: "Shareable links",
+    description:
+      "Share a link that encodes the exact chart, data, and options, so a teammate sees what you see.",
+  },
+  {
+    icon: BookmarkCheck,
+    title: "Saved charts",
+    description: "Save a chart in your browser and it is still there after a refresh.",
+  },
+  {
+    icon: Copy,
+    title: "One-click copy",
+    description:
+      "Copy one self-contained TSX component, no new dependency beyond shadcn/ui and Recharts.",
+  },
+]
+
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((faq) => ({
+    "@type": "Question",
+    name: faq.question,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: faq.answer,
+    },
+  })),
+}
 
 const chartLinks = [
   { type: "bar", label: "Bar", icon: BarChart3 },
@@ -52,16 +143,17 @@ export default function Home() {
             </span>
 
             <h1 className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:fill-mode-both text-4xl font-semibold tracking-tight text-balance duration-700 delay-[80ms] sm:text-6xl">
-              Charts for shadcn/ui,
+              Shadcn/ui charts,
               <br />
-              <span className="font-serif text-5xl italic font-normal text-primary sm:text-7xl">
-                done right
+              <span className="font-serif text-[2.55rem] italic font-normal text-primary sm:text-[3.825rem]">
+                CSV in, chart out
               </span>
             </h1>
 
-            <p className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:fill-mode-both max-w-md text-lg text-balance text-muted-foreground duration-700 delay-[160ms]">
-              Paste your CSV, see the chart render live, then copy a
-              production-ready component. No config, no account.
+            <p className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:fill-mode-both max-w-2xl text-lg text-balance text-muted-foreground duration-700 delay-[160ms]">
+              An open source shadcn/ui chart component library and generator.
+              Paste a CSV, preview 8 chart types, then copy the code. No
+              config, no account.
             </p>
 
             <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:fill-mode-both flex flex-wrap items-center justify-center gap-3 duration-700 delay-[240ms]">
@@ -116,9 +208,9 @@ export default function Home() {
           <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
             New to this?
           </span>
-          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+          <h2 className="text-[1.8rem] font-semibold tracking-tight sm:text-4xl">
             Get set up in{" "}
-            <span className="font-serif text-3xl italic font-normal text-primary sm:text-4xl">
+            <span className="font-serif text-4xl italic font-normal text-primary sm:text-[2.7rem]">
               three steps
             </span>
           </h2>
@@ -187,6 +279,98 @@ export default function Home() {
           </Link>
         </Reveal>
       </section>
+
+      <section className="w-full max-w-4xl border-t border-border px-6 py-20">
+        <Reveal className="flex flex-col items-center gap-6 text-center">
+          <h2 className="text-[1.8rem] font-semibold tracking-tight sm:text-4xl">
+            What is{" "}
+            <span className="font-serif text-4xl italic font-normal text-primary sm:text-[2.7rem]">
+              ChartCN
+            </span>
+            ?
+          </h2>
+          <p className="max-w-2xl text-muted-foreground">
+            Most chart libraries hand you a black box: a new dependency with
+            its own design system that never quite matches your app. ChartCN
+            skips that trade-off. Paste a CSV, pick from 8 chart types, and
+            copy a self-contained TSX component built on shadcn/ui and
+            Recharts, the same primitives your project likely already uses.
+            Nothing to install, no account to create, and the code is yours
+            to edit the moment you paste it.
+          </p>
+          <p className="max-w-2xl text-muted-foreground">
+            If you are not a developer, here is the short version: a
+            &ldquo;chart component&rdquo; is a small piece of code that draws
+            a chart and matches the look of the app around it. ChartCN builds
+            that piece of code from a CSV, the same file format Excel, Google
+            Sheets, or a database export already produces. Hand it to a
+            developer on your team, and it drops into the product in
+            minutes, with no redesign required.
+          </p>
+        </Reveal>
+      </section>
+
+      <section className="w-full max-w-5xl border-t border-border px-6 py-20">
+        <Reveal className="flex flex-col items-center gap-3 text-center">
+          <h2 className="text-[1.8rem] font-semibold tracking-tight sm:text-4xl">
+            What&apos;s{" "}
+            <span className="font-serif text-4xl italic font-normal text-primary sm:text-[2.7rem]">
+              included
+            </span>
+          </h2>
+          <p className="max-w-lg text-muted-foreground">
+            Every component ChartCN generates is plain shadcn/ui and Recharts
+            code. Here is what comes built in.
+          </p>
+        </Reveal>
+        <div className="mt-14 grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+          {features.map((feature, index) => (
+            <Reveal key={feature.title} delay={index * 60}>
+              <div className="flex flex-col gap-3">
+                <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <feature.icon className="size-5" />
+                </span>
+                <h3 className="font-medium text-foreground">{feature.title}</h3>
+                <p className="text-sm text-muted-foreground">{feature.description}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      <section className="w-full max-w-4xl border-t border-border px-6 py-20">
+        <Reveal className="flex flex-col items-center gap-3 text-center">
+          <h2 className="text-[1.8rem] font-semibold tracking-tight sm:text-4xl">
+            Frequently asked{" "}
+            <span className="font-serif text-4xl italic font-normal text-primary sm:text-[2.7rem]">
+              questions
+            </span>
+          </h2>
+        </Reveal>
+        <Reveal className="mt-8">
+          <Accordion className="mx-auto max-w-2xl gap-3 rounded-2xl bg-muted/60 p-3 sm:p-4">
+            {faqs.map((faq) => (
+              <AccordionItem
+                key={faq.question}
+                value={faq.question}
+                className="rounded-xl border border-border bg-card px-5"
+              >
+                <AccordionTrigger className="text-base">
+                  {faq.question}
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground">
+                  {faq.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </Reveal>
+      </section>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
     </main>
   )
 }

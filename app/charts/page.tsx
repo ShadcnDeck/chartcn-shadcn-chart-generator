@@ -1,10 +1,23 @@
+import type { Metadata } from "next"
+
+import { BreadcrumbChip } from "@/components/breadcrumb-chip"
 import { ChartCard } from "@/components/chart-card"
 import { chartTypes } from "@/lib/sample-data"
+
+export const metadata: Metadata = {
+  title: "Chart Gallery: 8 Shadcn UI Chart Types",
+  description:
+    "Browse all 8 shadcn/ui chart types: bar, line, area, combo, pie, radar, scatter, and radial. Preview live sample data, then paste your own CSV to generate the component.",
+  alternates: {
+    canonical: "/charts",
+  },
+}
 
 export default function ChartsGallery() {
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-10 px-6 py-16 sm:py-24">
       <div className="flex flex-col gap-3">
+        <BreadcrumbChip items={[{ label: "Chartcn", href: "/" }, { label: "Charts" }]} />
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
           Chart <span className="font-serif text-4xl italic font-normal text-primary sm:text-5xl">gallery</span>
         </h1>
