@@ -1,5 +1,8 @@
 # ChartCN — Free Open Source Shadcn/UI Chart Generator
 
+<img width="1920" height="1080" alt="Chartcn - Open Source Shadcn Chart" src="https://github.com/user-attachments/assets/16029aa9-890e-4886-b1c1-7a5a0a407ec3" />
+
+
 **ChartCN** is a free, open source CSV-to-chart generator for [shadcn/ui](https://ui.shadcn.com) and React. Paste a CSV, preview 8 chart types built on [Recharts](https://recharts.org), then copy a self-contained TSX component into your project. No install, no account, no new npm dependency beyond shadcn/ui and Recharts.
 
 🔗 **Live app:** [shadcndeck.com/chartcn](https://shadcndeck.com/chartcn)
