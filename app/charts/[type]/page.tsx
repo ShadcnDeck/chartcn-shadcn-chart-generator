@@ -41,6 +41,14 @@ export async function generateMetadata({
       title: `${label} Generator for Shadcn UI and React`,
       description,
       url: `/charts/${type}`,
+      images: [
+        {
+          url: "og-banner.jpg",
+          width: 1200,
+          height: 630,
+          alt: `${label} Generator for Shadcn UI and React`,
+        },
+      ],
     },
   }
 }
