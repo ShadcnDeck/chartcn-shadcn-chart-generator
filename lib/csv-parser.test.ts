@@ -100,6 +100,13 @@ describe("parseNumericCell", () => {
     expect(parseNumericCell("1.234,5")).toBe(1234.5)
   })
 
+  it("parses Indian lakh/crore-style grouping", () => {
+    expect(parseNumericCell("1,03,920")).toBe(103920)
+    expect(parseNumericCell("12,34,567")).toBe(1234567)
+    expect(parseNumericCell("1,23,45,678")).toBe(12345678)
+    expect(parseNumericCell("1,03,920.50")).toBe(103920.5)
+  })
+
   it("treats repeated dots as European thousands grouping", () => {
     expect(parseNumericCell("1.234.567")).toBe(1234567)
   })

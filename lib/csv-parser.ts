@@ -5,10 +5,14 @@ const MAX_ROWS = 500
 const MAX_SERIES = 10
 
 const THOUSANDS_COMMA_RE = /^-?\d{1,3}(,\d{3})+$/
+// Indian numbering (lakh/crore): groups of 2 digits after the first group,
+// e.g. "1,03,920" = 103920, "12,34,567" = 1234567.
+const INDIAN_GROUPING_RE = /^-?\d{1,2}(,\d{2})+,\d{3}$/
 
-/** Parses a numeric CSV cell, tolerating thousands separators from both US
- * ("1,234.5") and European ("1.234,5") style exports. Returns null when the
- * cell is blank or isn't numeric at all, instead of coercing either to 0. */
+/** Parses a numeric CSV cell, tolerating thousands separators from US
+ * ("1,234.5"), European ("1.234,5"), and Indian ("1,03,920") style exports.
+ * Returns null when the cell is blank or isn't numeric at all, instead of
+ * coercing either to 0. */
 export function parseNumericCell(raw: string): number | null {
   const value = raw.trim()
   if (value === "") return null
@@ -30,12 +34,14 @@ export function parseNumericCell(raw: string): number | null {
         ? value.replace(/\./g, "").replace(",", ".")
         : value.replace(/,/g, "")
   } else if (lastComma !== -1) {
-    // Only commas: thousands grouping ("1,234,567") unless the trailing
-    // group isn't 3 digits, which means the comma is a decimal mark
-    // ("12,5" from a European export).
-    normalized = THOUSANDS_COMMA_RE.test(value)
-      ? value.replace(/,/g, "")
-      : value.replace(",", ".")
+    // Only commas: thousands grouping, either US-style ("1,234,567") or
+    // Indian lakh/crore-style ("1,03,920"), unless the trailing group isn't
+    // 3 digits at all, which means the comma is a decimal mark ("12,5" from
+    // a European export).
+    normalized =
+      THOUSANDS_COMMA_RE.test(value) || INDIAN_GROUPING_RE.test(value)
+        ? value.replace(/,/g, "")
+        : value.replace(",", ".")
   } else {
     // Only dots: a single dot is a decimal point; repeated dots are
     // thousands grouping ("1.234.567").
