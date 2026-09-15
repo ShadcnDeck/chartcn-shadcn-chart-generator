@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { parseCSV, toCSV, validateColumnsForType } from "@/lib/csv-parser"
+import { parseCSV, parseNumericCell, toCSV, validateColumnsForType } from "@/lib/csv-parser"
 
 describe("parseCSV", () => {
   it("parses a valid CSV into headers and numeric rows", () => {
@@ -23,10 +23,31 @@ describe("parseCSV", () => {
     )
   })
 
-  it("coerces non-numeric values to 0 and warns", () => {
+  it("leaves genuinely non-numeric values blank and names the column", () => {
     const result = parseCSV("Month,Revenue\nJan,abc")
-    expect(result.rows).toEqual([{ Month: "Jan", Revenue: 0 }])
-    expect(result.error).toContain("non-numeric values were replaced with 0")
+    expect(result.rows).toEqual([{ Month: "Jan", Revenue: null }])
+    expect(result.error).toContain('Non-numeric values in column "Revenue" were left blank')
+  })
+
+  it("leaves blank cells as null instead of 0", () => {
+    const result = parseCSV("Month,Revenue\nJan,100\nFeb,")
+    expect(result.rows).toEqual([
+      { Month: "Jan", Revenue: 100 },
+      { Month: "Feb", Revenue: null },
+    ])
+    expect(result.error).toBeUndefined()
+  })
+
+  it("parses US-style thousands separators", () => {
+    const result = parseCSV("Month,Revenue\nJan,\"1,234.5\"")
+    expect(result.rows).toEqual([{ Month: "Jan", Revenue: 1234.5 }])
+    expect(result.error).toBeUndefined()
+  })
+
+  it("parses European-style thousands separators", () => {
+    const result = parseCSV("Month,Revenue\nJan,\"1.234,5\"")
+    expect(result.rows).toEqual([{ Month: "Jan", Revenue: 1234.5 }])
+    expect(result.error).toBeUndefined()
   })
 
   it("truncates series beyond the max and warns", () => {
@@ -46,6 +67,41 @@ describe("parseCSV", () => {
     const result = parseCSV(csv)
     expect(result.rows).toHaveLength(500)
     expect(result.error).toContain("Only the first 500 rows are shown")
+  })
+})
+
+describe("parseNumericCell", () => {
+  it("parses plain integers and decimals", () => {
+    expect(parseNumericCell("42")).toBe(42)
+    expect(parseNumericCell("12.5")).toBe(12.5)
+    expect(parseNumericCell("-7")).toBe(-7)
+  })
+
+  it("returns null for blank cells", () => {
+    expect(parseNumericCell("")).toBeNull()
+    expect(parseNumericCell("   ")).toBeNull()
+  })
+
+  it("returns null for genuinely non-numeric text", () => {
+    expect(parseNumericCell("abc")).toBeNull()
+  })
+
+  it("treats a lone comma-grouped value as US thousands", () => {
+    expect(parseNumericCell("1,234")).toBe(1234)
+    expect(parseNumericCell("1,234,567")).toBe(1234567)
+  })
+
+  it("treats a short trailing group after a comma as a European decimal", () => {
+    expect(parseNumericCell("12,5")).toBe(12.5)
+  })
+
+  it("disambiguates mixed separators by which comes last", () => {
+    expect(parseNumericCell("1,234.5")).toBe(1234.5)
+    expect(parseNumericCell("1.234,5")).toBe(1234.5)
+  })
+
+  it("treats repeated dots as European thousands grouping", () => {
+    expect(parseNumericCell("1.234.567")).toBe(1234567)
   })
 })
 

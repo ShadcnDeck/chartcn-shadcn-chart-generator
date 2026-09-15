@@ -55,7 +55,10 @@ ${opts.jsx}
 
 function buildRowType(data: ParsedChartData): string {
   const series = getSeries(data)
-  const fields = [`${CATEGORY_KEY}: string`, ...series.map(({ key }) => `${key}: number`)]
+  const fields = [
+    `${CATEGORY_KEY}: string`,
+    ...series.map(({ key }) => `${key}: number | null`),
+  ]
   return `{ ${fields.join("; ")} }`
 }
 

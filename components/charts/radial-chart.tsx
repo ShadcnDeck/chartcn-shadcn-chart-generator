@@ -19,8 +19,8 @@ interface RadialChartProps {
 }
 
 export function RadialChart({ data, options }: RadialChartProps) {
-  const rows = toChartRows(data)
   const valueKey = getSeries(data)[0]?.key ?? "value"
+  const rows = toChartRows(data).filter((row) => row[valueKey] !== null)
 
   const chartConfig: ChartConfig = {}
   rows.forEach((row, index) => {

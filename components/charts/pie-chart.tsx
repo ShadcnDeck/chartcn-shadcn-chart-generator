@@ -19,8 +19,8 @@ interface PieChartProps {
 }
 
 export function PieChart({ data, options }: PieChartProps) {
-  const rows = toChartRows(data)
   const valueKey = getSeries(data)[0]?.key ?? "value"
+  const rows = toChartRows(data).filter((row) => row[valueKey] !== null)
   const total = rows.reduce((sum, row) => {
     const value = Number(row[valueKey])
     return sum + (Number.isFinite(value) ? value : 0)

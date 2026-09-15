@@ -122,8 +122,11 @@ export function toScatterGroups(
 
   data.rows.forEach((row) => {
     const category = String(row[categoryHeader] ?? "")
-    const x = Number(row[xHeader])
-    const y = Number(row[yHeader])
+    const rawX = row[xHeader]
+    const rawY = row[yHeader]
+    if (rawX === null || rawY === null) return
+    const x = Number(rawX)
+    const y = Number(rawY)
     if (!Number.isFinite(x) || !Number.isFinite(y)) return
 
     if (!byCategory.has(category)) {
@@ -176,8 +179,11 @@ export function computeGrowth(data: ParsedChartData): number | null {
   if (rows.length < 2) return null
 
   const key = series[0].key
-  const first = Number(rows[0][key])
-  const last = Number(rows[rows.length - 1][key])
+  const rawFirst = rows[0][key]
+  const rawLast = rows[rows.length - 1][key]
+  if (rawFirst === null || rawLast === null) return null
+  const first = Number(rawFirst)
+  const last = Number(rawLast)
   if (!Number.isFinite(first) || !Number.isFinite(last) || first === 0) return null
 
   return ((last - first) / Math.abs(first)) * 100

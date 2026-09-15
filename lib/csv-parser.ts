@@ -4,6 +4,49 @@ import type { ChartDataRow, ChartType, ParsedChartData } from "@/types/chart"
 const MAX_ROWS = 500
 const MAX_SERIES = 10
 
+const THOUSANDS_COMMA_RE = /^-?\d{1,3}(,\d{3})+$/
+
+/** Parses a numeric CSV cell, tolerating thousands separators from both US
+ * ("1,234.5") and European ("1.234,5") style exports. Returns null when the
+ * cell is blank or isn't numeric at all, instead of coercing either to 0. */
+export function parseNumericCell(raw: string): number | null {
+  const value = raw.trim()
+  if (value === "") return null
+
+  // Plain integer/decimal with no separators to disambiguate.
+  if (/^-?\d+(\.\d+)?$/.test(value)) {
+    return Number(value)
+  }
+
+  const lastComma = value.lastIndexOf(",")
+  const lastDot = value.lastIndexOf(".")
+
+  let normalized: string
+  if (lastComma !== -1 && lastDot !== -1) {
+    // Both separators present: whichever comes last is the decimal mark,
+    // the other is thousands-grouping and gets stripped.
+    normalized =
+      lastComma > lastDot
+        ? value.replace(/\./g, "").replace(",", ".")
+        : value.replace(/,/g, "")
+  } else if (lastComma !== -1) {
+    // Only commas: thousands grouping ("1,234,567") unless the trailing
+    // group isn't 3 digits, which means the comma is a decimal mark
+    // ("12,5" from a European export).
+    normalized = THOUSANDS_COMMA_RE.test(value)
+      ? value.replace(/,/g, "")
+      : value.replace(",", ".")
+  } else {
+    // Only dots: a single dot is a decimal point; repeated dots are
+    // thousands grouping ("1.234.567").
+    const dotCount = (value.match(/\./g) ?? []).length
+    normalized = dotCount > 1 ? value.replace(/\./g, "") : value
+  }
+
+  const parsed = Number(normalized)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
 export function parseCSV(csv: string): ParsedChartData {
   const trimmed = csv.trim()
 
@@ -51,7 +94,7 @@ export function parseCSV(csv: string): ParsedChartData {
     dataRows = dataRows.slice(0, MAX_ROWS)
   }
 
-  let hadNonNumeric = false
+  const nonNumericColumns = new Set<string>()
 
   const rows: ChartDataRow[] = dataRows
     .filter((row) => row.some((cell) => cell !== ""))
@@ -63,19 +106,24 @@ export function parseCSV(csv: string): ParsedChartData {
           record[header] = rawValue
           return
         }
-        const numericValue = Number(rawValue)
-        if (rawValue === "" || Number.isNaN(numericValue)) {
-          if (rawValue !== "") hadNonNumeric = true
-          record[header] = 0
-        } else {
-          record[header] = numericValue
+        if (rawValue === "") {
+          record[header] = null
+          return
         }
+        const numericValue = parseNumericCell(rawValue)
+        if (numericValue === null) {
+          nonNumericColumns.add(header)
+        }
+        record[header] = numericValue
       })
       return record
     })
 
-  if (hadNonNumeric) {
-    warnings.push("Some non-numeric values were replaced with 0.")
+  if (nonNumericColumns.size > 0) {
+    const columns = [...nonNumericColumns].map((c) => `"${c}"`).join(", ")
+    warnings.push(
+      `Non-numeric values in column${nonNumericColumns.size > 1 ? "s" : ""} ${columns} were left blank.`
+    )
   }
   if (truncated) {
     warnings.push(`Only the first ${MAX_ROWS} rows are shown.`)

@@ -9,7 +9,7 @@ export type ChartType =
   | "radial"
 
 export interface ChartDataRow {
-  [key: string]: string | number
+  [key: string]: string | number | null
 }
 
 export interface ParsedChartData {
