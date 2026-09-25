@@ -35,6 +35,7 @@ const footerColumns: {
   {
     heading: "Guides",
     links: [
+      { label: "Changelog", href: "/changelog" },
       { label: "Blog", href: `${SHADCNDECK_URL}/blog`, external: true },
       { label: "Shadcn Components", href: `${SHADCNDECK_URL}/blog/shadcn-components`, external: true },
       { label: "Shadcn Theming", href: `${SHADCNDECK_URL}/blog/shadcn-theming`, external: true },
@@ -103,14 +104,23 @@ export function SiteFooter() {
               <ul className="flex flex-col gap-2.5">
                 {column.links.map((link) => (
                   <li key={link.label}>
-                    <a
-                      href={link.href}
-                      target={link.external ? "_blank" : undefined}
-                      rel={link.external ? "noreferrer" : undefined}
-                      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                      {link.label}
-                    </a>
+                    {link.external ? (
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link
+                        href={link.href}
+                        className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        {link.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>

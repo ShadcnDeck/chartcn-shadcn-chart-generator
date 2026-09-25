@@ -2,7 +2,10 @@ import Link from "next/link"
 
 import { ShadcnDeckLogo } from "@/components/shadcndeck-logo"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { badgeVariants } from "@/components/ui/badge"
+import { currentVersion } from "@/lib/changelog"
 import { GITHUB_URL, ORGANIZATION_URL as SHADCNDECK_URL } from "@/lib/seo"
+import { cn } from "@/lib/utils"
 
 export function SiteHeader() {
   return (
@@ -24,6 +27,13 @@ export function SiteHeader() {
                 by ShadcnDeck
               </a>
             </span>
+            <Link
+              href="/changelog"
+              title="View version history"
+              className={cn(badgeVariants({ variant: "outline" }), "hidden font-mono sm:inline-flex")}
+            >
+              v{currentVersion}
+            </Link>
           </div>
 
           <nav className="flex items-center gap-4 sm:gap-6">
