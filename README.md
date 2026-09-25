@@ -3,7 +3,7 @@
 <img width="1920" height="1080" alt="Chartcn - Open Source Shadcn Chart" src="https://github.com/user-attachments/assets/16029aa9-890e-4886-b1c1-7a5a0a407ec3" />
 
 
-**ChartCN** is a free, open source data-to-chart generator for [shadcn/ui](https://ui.shadcn.com) and React. Paste a CSV or a JSON API response, preview 10 chart types built on [Recharts](https://recharts.org), then copy a self-contained TSX component into your project. No install, no account, no new npm dependency beyond shadcn/ui and Recharts.
+**ChartCN** is a free, open source data-to-chart generator for [shadcn/ui](https://ui.shadcn.com) and React. Paste a CSV or a JSON API response, preview 13 chart types built on [Recharts](https://recharts.org), then copy a self-contained TSX component into your project. No install, no account, no new npm dependency beyond shadcn/ui and Recharts.
 
 🔗 **Live app:** [shadcndeck.com/chartcn](https://shadcndeck.com/chartcn)
 
@@ -28,13 +28,13 @@
 
 ## Why ChartCN
 
-Most chart libraries hand you a black box: a new dependency with its own design system that never quite matches your app. ChartCN skips that trade-off. Paste a CSV or JSON, pick from 10 chart types, and copy a self-contained TSX component built on shadcn/ui and Recharts — the same primitives most shadcn/ui projects already use. Nothing to install, no account to create, and the code is yours to edit the moment you paste it.
+Most chart libraries hand you a black box: a new dependency with its own design system that never quite matches your app. ChartCN skips that trade-off. Paste a CSV or JSON, pick from 13 chart types, and copy a self-contained TSX component built on shadcn/ui and Recharts — the same primitives most shadcn/ui projects already use. Nothing to install, no account to create, and the code is yours to edit the moment you paste it.
 
 If you're not a developer: a "chart component" is a small piece of code that draws a chart and matches the look of the app around it. ChartCN builds that piece of code from a CSV — the same file format Excel, Google Sheets, or a database export already produces. Hand it to a developer on your team and it drops into the product in minutes, with no redesign required.
 
 ## Features
 
-- **10 chart types built in** — Bar, Horizontal Bar, Line, Area, Combo (bar + line), Pie/Donut, Radar, Scatter, Radial/Gauge, and KPI Sparkline cards
+- **13 chart types built in** — Bar, Horizontal Bar, Line, Area, Combo (bar + line), Pie/Donut, Radar, Scatter, Radial/Gauge, KPI Sparkline cards, Interactive Area (range buttons + zoom), Waterfall, and Heatmap
 - **Paste any tabular data** — CSV, JSON (arrays of objects, `{ data: [...] }` wrappers, and more), TSV copied from Excel or Google Sheets, or a Markdown table. The format is detected automatically; upload a file or edit the table directly
 - **Your field names in the code** — the generated component uses your real column / JSON keys (`{ month: "Jan", revenue: 42000 }`), so it accepts your API response without mapping code
 - **Variant toggles per chart** — stacked or grouped bars, 100% stacking, smooth lines, donut style, and more
@@ -60,6 +60,9 @@ If you're not a developer: a "chart component" is a small piece of code that dra
 | Radial / Gauge | Progress toward a goal per category, as rings or a half gauge |
 | Horizontal Bar | Rankings and long category labels, sortable, with value labels |
 | KPI Sparkline | A headline metric, its change vs. the previous period, and a trend sparkline |
+| Interactive Area | Daily time series with 7 / 30 / 90-day range buttons and a drag-to-zoom brush |
+| Waterfall | Walk a starting value through increases and decreases to a total (MRR bridges, P&L) |
+| Heatmap | A value grid shaded by intensity: cohort retention, activity by day and hour |
 
 ## Getting started
 
@@ -75,7 +78,7 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000).
 
 - `/` — landing page with a live demo
-- `/charts` — gallery of all 10 chart types
+- `/charts` — gallery of all 13 chart types
 - `/charts/[type]` — paste/upload/edit data, tweak variants, customize colors, copy the component
 - `/api/chart?c=...` — the chart as a static SVG image (see [Images](#images-for-readmes-and-docs))
 
@@ -110,6 +113,9 @@ Feb,58000,34000
 ```
 
 - **Pie/Donut**, **Radial/Gauge**, and **KPI Sparkline** charts expect exactly 2 columns: `Category,Value` (for KPI: `Period,Value`).
+- **Waterfall** charts expect 2 columns, `Step,Change`: the first row is the starting total and every later row is a change (negative for decreases). A final total bar is added for you.
+- **Heatmap** data is a grid: column 1 labels the rows, every other column is a grid column. Blank cells stay empty, which suits cohort triangles.
+- **Interactive Area** filters by date when column 1 holds dates; otherwise the range buttons keep the last 7 / 30 / 90 rows.
 - **Scatter** charts expect exactly 3 columns: `Category,X,Y` — the category groups points into a legend/color series, X and Y are the two numeric axes.
 - If column 1 looks like a date (`2024-01-01` or `1/5/2024`), Bar/Line/Area/Combo charts automatically format the axis and tooltip as dates.
 - Numbers with US (`1,234.5`), European (`1.234,5`), and Indian (`1,03,920`) separators are all understood; blank cells stay blank instead of becoming 0.
@@ -155,7 +161,7 @@ ChartCN is a free, open source tool that turns your CSV or JSON data into a read
 No. ChartCN generates code built on shadcn/ui's own chart primitives and Recharts, the same libraries most shadcn/ui projects already use. The copied component drops straight into your codebase without adding a new dependency.
 
 **What chart types are supported?**
-ChartCN supports 10 chart types: Bar, Horizontal Bar, Line, Area, Combo (bar and line together), Pie/Donut, Radar, Scatter, Radial/Gauge, and KPI Sparkline cards. Each one comes with its own variant toggles, like stacked or grouped bars, smooth lines, or donut style.
+ChartCN supports 13 chart types: Bar, Horizontal Bar, Line, Area, Combo (bar and line together), Pie/Donut, Radar, Scatter, Radial/Gauge, KPI Sparkline cards, Interactive Area, Waterfall, and Heatmap. Each one comes with its own variant toggles, like stacked or grouped bars, smooth lines, or donut style.
 
 **What format should my CSV be in?**
 The first column is always the category or label axis, and every column after it is a numeric data series. Pie/Donut and Radial/Gauge charts expect exactly 2 columns (Category, Value), and Scatter charts expect exactly 3 columns (Category, X, Y). If the first column looks like a date, Bar, Line, Area, and Combo charts format the axis as dates automatically.

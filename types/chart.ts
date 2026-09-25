@@ -9,6 +9,9 @@ export type ChartType =
   | "scatter"
   | "radial"
   | "kpi"
+  | "interactive"
+  | "waterfall"
+  | "heatmap"
 
 export interface ChartDataRow {
   [key: string]: string | number | null
@@ -28,9 +31,13 @@ export interface ChartOptions {
   labelType?: "value" | "percent" | "label" // pie
   seriesRenderType?: Record<string, "bar" | "line"> // combo
   sortBars?: "none" | "desc" | "asc" // horizontal-bar
-  showValues?: boolean // horizontal-bar
+  showValues?: boolean // horizontal-bar, waterfall, heatmap
   halfGauge?: boolean // radial
   sparkType?: "area" | "line" | "bar" // kpi
+  defaultRange?: "7d" | "30d" | "90d" | "all" // interactive
+  showBrush?: boolean // interactive
+  showTotal?: boolean // waterfall
+  heatFormat?: "number" | "percent" // heatmap
   tooltipStyle?: "breakdown" | "simple" // multi-series bar, horizontal-bar, line, area
   customColors?: Record<string, string> // all types, keyed by series key or category label
   exportMode?: "inline" | "props"

@@ -21,6 +21,8 @@ export interface ExportImageOptions {
   legend: ExportLegendItem[]
   header?: ExportHeader
   footer?: string
+  /** Draw the legend below the chart when Recharts renders none. */
+  legendBelow?: boolean
 }
 
 const STYLE_PROPS = [
@@ -198,6 +200,14 @@ export function buildChartSvg(
     const legend = renderLegend(legendItems, width, top, foreground, fontFamily)
     parts.push(legend.svg)
     y = Math.max(y, top + legend.height)
+  } else if (options.legendBelow && options.legend.length > 0) {
+    const legendItems = options.legend.map((item) => ({
+      ...item,
+      color: resolveCssColor(item.color, container),
+    }))
+    const legend = renderLegend(legendItems, width, y + 12, foreground, fontFamily)
+    parts.push(legend.svg)
+    y += 12 + legend.height
   }
   y += 8
 

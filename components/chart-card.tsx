@@ -2,9 +2,12 @@ import Link from "next/link"
 import {
   AreaChart,
   BarChart3,
+  ChartArea,
+  ChartColumnDecreasing,
   ChartBarBig,
   ChartNoAxesCombined,
   Gauge,
+  Grid3x3,
   LineChart,
   PieChart,
   Radar,
@@ -43,6 +46,9 @@ const chartIcons: Record<ChartType, LucideIcon> = {
   scatter: ScatterChart,
   radial: Gauge,
   kpi: TrendingUp,
+  interactive: ChartArea,
+  waterfall: ChartColumnDecreasing,
+  heatmap: Grid3x3,
 }
 
 export function ChartCard({ type }: ChartCardProps) {

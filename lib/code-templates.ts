@@ -15,6 +15,7 @@ import {
   comboRenderType,
   horizontalLabelWidth,
 } from "@/lib/chart-style"
+import { WATERFALL_KINDS, heatColor, waterfallColor } from "@/lib/chart-models"
 import type { ChartDataRow, ChartOptions, ChartType, ParsedChartData } from "@/types/chart"
 
 const TICK_FORMATTER =
@@ -167,12 +168,11 @@ function renderShell(opts: {
     ? `${opts.preReturn.map((line) => `  ${line}`).join("\n")}\n\n`
     : ""
   const helpers = opts.helpers ? `\n\n${opts.helpers}` : ""
+  const imports = opts.imports.length > 0 ? `${opts.imports.join("\n")}\n\n` : ""
 
   return `"use client"
 
-${opts.imports.join("\n")}
-
-${typeDecl}${dataDecl}${opts.configDecl}${helpers}
+${imports}${typeDecl}${dataDecl}${opts.configDecl}${helpers}
 
 ${signature}
 ${preReturn}  return (
@@ -991,6 +991,369 @@ ${spark}
   })
 }
 
+const RANGE_BUTTONS = `      <div className="flex justify-end">
+        <div role="group" aria-label="Time range" className="inline-flex rounded-lg border border-border bg-muted/40 p-0.5">
+          {RANGES.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              aria-pressed={range === option.value}
+              onClick={() => setRange(option.value)}
+              className={\`rounded-md px-2.5 py-1 text-xs font-medium transition-colors \${
+                range === option.value
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }\`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>`
+
+function interactive(data: ParsedChartData, options?: ChartOptions): string {
+  const fields = getExportFields(data)
+  const rows = toExportRows(data)
+  const customColors = options?.customColors
+  const dateAxis = isDateAxis(data)
+  const defaultRange = options?.defaultRange ?? "90d"
+  const showBrush = options?.showBrush ?? true
+  const tooltip = seriesTooltip(fields.series.length, options, dateAxis, "dot")
+  const categoryKey = fields.category.key
+  const rowCategory = `String(${toPropertyAccess("row", categoryKey)})`
+
+  const areas = fields.series
+    .map(
+      (field, index) =>
+        `          <Area dataKey=${jsxString(field.key)} type="natural" stackId="stack" fill=${gradientUrl(
+          index
+        )} fillOpacity={1} stroke=${jsxString(colorRef(field, index, customColors))} strokeWidth={2}${staggerProp(index)} />`
+    )
+    .join("\n")
+  const gradients = renderGradients(fields, customColors, { from: 0.8, to: 0.05 })
+    .split("\n")
+    .map((line) => `  ${line}`)
+    .join("\n")
+  const xAxisTick = dateAxis ? ` tickFormatter={${DATE_TICK_FORMATTER}}` : ""
+  const brush = showBrush
+    ? `\n          {chartData.length > 2 && (\n            <Brush key={range} dataKey=${jsxString(
+        categoryKey
+      )} height={28} travellerWidth={8} stroke="var(--border)" fill="var(--card)"${xAxisTick} />\n          )}`
+    : ""
+
+  // With dates: keep rows within N days of the newest one. Without: the last N rows.
+  const preReturn = [
+    USE_ID_LINE,
+    `const [range, setRange] = useState<(typeof RANGES)[number]["value"]>(${JSON.stringify(defaultRange)})`,
+    "const days = RANGES.find((option) => option.value === range)?.days ?? null",
+    ...(dateAxis
+      ? [
+          `const newest = new Date(String(${optionalAccess("data[data.length - 1]", categoryKey)} ?? "")).getTime()`,
+          "const chartData =",
+          "  days === null",
+          "    ? data",
+          `    : data.filter((row) => new Date(${rowCategory}).getTime() >= newest - (days - 1) * 86_400_000)`,
+        ]
+      : ["const chartData = days === null ? data : data.slice(-days)"]),
+  ]
+
+  const jsx = `    <div className="flex w-full flex-col gap-3">
+${RANGE_BUTTONS}
+      <ChartContainer config={chartConfig} className="aspect-auto h-[320px] w-full">
+        <AreaChart accessibilityLayer data={chartData}>
+${gradients}
+          <CartesianGrid vertical={false} strokeDasharray="3 5" />
+          <XAxis dataKey=${jsxString(categoryKey)} tickLine={false} axisLine={false} tickMargin={8} minTickGap={32}${xAxisTick} />
+          <YAxis tickLine={false} axisLine={false} tickMargin={8} width={40} tickFormatter={${TICK_FORMATTER}} />
+          <ChartTooltip content={${tooltip.element}} />
+          <ChartLegend content={<ChartLegendContent />} itemSorter={null} />
+${areas}${brush}
+        </AreaChart>
+      </ChartContainer>
+    </div>`
+
+  const rangesDecl = `const RANGES = [
+  { value: "7d", label: "7 days", days: 7 },
+  { value: "30d", label: "30 days", days: 30 },
+  { value: "90d", label: "90 days", days: 90 },
+  { value: "all", label: "All", days: null },
+] as const`
+
+  return renderShell({
+    imports: [
+      'import { useId, useState } from "react"',
+      rechartsImports([
+        "Area",
+        "AreaChart",
+        "CartesianGrid",
+        "XAxis",
+        "YAxis",
+        ...(showBrush ? ["Brush"] : []),
+      ]),
+      uiImports([...LEGEND_UI, "ChartTooltip", ...tooltip.uiNames]),
+    ],
+    configDecl: `${renderSeriesConfig(fields, customColors)}\n\n${rangesDecl}`,
+    rowType: buildRowType(fields, rows),
+    rows,
+    helpers: tooltip.helpers,
+    preReturn,
+    jsx,
+    exportMode: options?.exportMode,
+  })
+}
+
+function waterfall(data: ParsedChartData, options?: ChartOptions): string {
+  const fields: Fields = { ...getExportFields(data) }
+  fields.series = fields.series.slice(0, 1)
+  const rows = toExportRows(data).map((row) => ({
+    [fields.category.key]: row[fields.category.key],
+    ...(fields.series[0] ? { [fields.series[0].key]: row[fields.series[0].key] } : {}),
+  }))
+  const customColors = options?.customColors
+  const showTotal = options?.showTotal ?? true
+  const showValues = options?.showValues ?? true
+  const isProps = options?.exportMode === "props"
+  const valueAccess = toPropertyAccess("row", fields.series[0]?.key ?? "value")
+  const labelAccess = `String(${toPropertyAccess("row", fields.category.key)})`
+
+  const config = `const chartConfig = {
+${WATERFALL_KINDS.map(
+  ({ key, label }) =>
+    `  ${key}: { label: ${JSON.stringify(label)}, color: ${JSON.stringify(waterfallColor(key, customColors))} },`
+).join("\n")}
+} satisfies ChartConfig`
+
+  const totalStep = showTotal
+    ? `
+  const last = steps.at(-1)
+  if (!last || steps.length < 2) return steps
+  return [
+    ...steps,
+    { label: "Total", change: last.end, end: last.end, range: [Math.min(0, last.end), Math.max(0, last.end)], kind: "total", display: compact(last.end) },
+  ]`
+    : "\n  return steps"
+
+  const helpers = `type WaterfallStep = {
+  label: string
+  change: number
+  end: number
+  range: [number, number]
+  kind: keyof typeof chartConfig
+  display: string
+}
+
+const compact = (value: number) =>
+  new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(value)
+
+/** The first row is the starting total; every later row changes the running
+ * total. Each step becomes a floating bar spanning [low, high]. */
+function toSteps(rows: ${isProps ? "ChartRow[]" : "typeof data"}): WaterfallStep[] {
+  const steps = rows.reduce<WaterfallStep[]>((acc, row, index) => {
+    const value = ${valueAccess} ?? 0
+    const previous = acc.at(-1)?.end ?? 0
+    const start = index === 0 ? 0 : previous
+    const end = index === 0 ? value : previous + value
+    const kind = index === 0 ? "total" : value >= 0 ? "increase" : "decrease"
+    return [
+      ...acc,
+      {
+        label: ${labelAccess},
+        change: value,
+        end,
+        range: [Math.min(start, end), Math.max(start, end)],
+        kind,
+        display: kind !== "total" && value > 0 ? \`+\${compact(value)}\` : compact(value),
+      },
+    ]
+  }, [])${totalStep}
+}
+
+function WaterfallTooltip({ active, payload }: { active?: boolean; payload?: ReadonlyArray<{ payload?: unknown }> }) {
+  const step = payload?.[0]?.payload as WaterfallStep | undefined
+  if (!active || !step) return null
+  return (
+    <div className="grid min-w-36 gap-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs shadow-xl">
+      <span className="font-medium text-foreground">{step.label}</span>
+      <div className="flex items-center justify-between gap-4">
+        <span className="flex items-center gap-1.5 text-muted-foreground">
+          <span className="size-2 shrink-0 rounded-[2px]" style={{ backgroundColor: chartConfig[step.kind].color }} />
+          {step.kind === "total" ? "Total" : "Change"}
+        </span>
+        <span className="font-mono font-medium text-foreground tabular-nums">
+          {step.kind !== "total" && step.change > 0 ? "+" : ""}
+          {step.change.toLocaleString("en-US")}
+        </span>
+      </div>
+      {step.kind !== "total" && (
+        <div className="flex items-center justify-between gap-4 text-muted-foreground">
+          <span>Running total</span>
+          <span className="font-mono tabular-nums">{step.end.toLocaleString("en-US")}</span>
+        </div>
+      )}
+    </div>
+  )
+}`
+
+  const labels = showValues
+    ? `>
+            <LabelList dataKey="display" position="top" offset={6} className="fill-foreground" fontSize={12} />
+          </Bar>`
+    : " />"
+
+  const jsx = `    <div className="flex w-full flex-col gap-2">
+      <ChartContainer config={chartConfig} className="aspect-auto h-[330px] w-full">
+        <BarChart accessibilityLayer data={steps} barCategoryGap="24%" margin={{ top: 20 }}>
+          <CartesianGrid vertical={false} strokeDasharray="3 5" />
+          <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={10} />
+          <YAxis tickLine={false} axisLine={false} tickMargin={8} width={44} tickFormatter={compact} />
+          {hasNegative && <ReferenceLine y={0} stroke="var(--border)" />}
+          <ChartTooltip cursor={{ fill: "var(--muted)", opacity: 0.6 }} content={<WaterfallTooltip />} />
+          <Bar
+            dataKey="range"
+            fill="var(--chart-1)"
+            radius={4}
+            maxBarSize={56}
+            shape={(props) => <Rectangle {...props} fill={chartConfig[(props.payload as WaterfallStep).kind].color} />}
+          ${labels}
+        </BarChart>
+      </ChartContainer>
+      <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
+        {(Object.keys(chartConfig) as (keyof typeof chartConfig)[]).map((kind) => (
+          <span key={kind} className="flex items-center gap-1.5">
+            <span className="size-2 shrink-0 rounded-[2px]" style={{ backgroundColor: chartConfig[kind].color }} />
+            {chartConfig[kind].label}
+          </span>
+        ))}
+      </div>
+    </div>`
+
+  return renderShell({
+    imports: [
+      rechartsImports([
+        "Bar",
+        "BarChart",
+        "CartesianGrid",
+        "Rectangle",
+        "ReferenceLine",
+        "XAxis",
+        "YAxis",
+        ...(showValues ? ["LabelList"] : []),
+      ]),
+      uiImports(["ChartTooltip"]),
+    ],
+    configDecl: config,
+    rowType: buildRowType(fields, rows),
+    rows,
+    helpers,
+    preReturn: [
+      "const steps = toSteps(data)",
+      "const hasNegative = steps.some((step) => step.range[0] < 0)",
+    ],
+    jsx,
+    exportMode: options?.exportMode,
+  })
+}
+
+function heatmap(data: ParsedChartData, options?: ChartOptions): string {
+  const fields = getExportFields(data)
+  const rows = toExportRows(data)
+  const color = heatColor(options?.customColors)
+  const showValues = options?.showValues ?? true
+  const format = options?.heatFormat ?? "number"
+  const categoryKey = fields.category.key
+  const rowLabel = `String(${toPropertyAccess("row", categoryKey)})`
+  const isProps = options?.exportMode === "props"
+
+  const formatter =
+    format === "percent"
+      ? `/** Values up to 1 are fractions; anything larger is already a percentage. */
+function formatValue(value: number, max: number) {
+  return \`\${Math.round(max <= 1 ? value * 100 : value)}%\`
+}`
+      : `function formatValue(value: number) {
+  return new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(value)
+}`
+  const fmt = (arg: string) => (format === "percent" ? `formatValue(${arg}, max)` : `formatValue(${arg})`)
+
+  const configDecl = `const columns = [${fields.series.map((f) => JSON.stringify(f.key)).join(", ")}] as const
+
+/** Cells mix this color into the muted background by value. */
+const heatColor = ${JSON.stringify(color)}`
+
+  const jsx = `    <div className="flex w-full flex-col gap-4">
+      <div className="w-full overflow-x-auto">
+        <div
+          role="table"
+          className="grid min-w-fit gap-1 text-xs"
+          style={{ gridTemplateColumns: \`auto repeat(\${columns.length}, minmax(2.75rem, 1fr))\` }}
+        >
+          <div role="row" className="contents">
+            <div role="presentation" />
+            {columns.map((column) => (
+              <div key={column} role="columnheader" className="truncate px-1 pb-1 text-center font-medium text-muted-foreground">
+                {column}
+              </div>
+            ))}
+          </div>
+          {data.map((row, r) => (
+            <div key={${rowLabel}} role="row" className="contents">
+              <div role="rowheader" className="flex items-center justify-end pr-2 font-medium whitespace-nowrap text-muted-foreground">
+                {${rowLabel}}
+              </div>
+              {columns.map((column, c) => {
+                const value = row[column]
+                if (typeof value !== "number") {
+                  return <div key={column} role="cell" className="h-10 rounded-md bg-muted/40" />
+                }
+                const intensity = max === min ? 1 : (value - min) / (max - min)
+                return (
+                  <div
+                    key={column}
+                    role="cell"
+                    title={\`\${${rowLabel}} · \${column}: \${${fmt("value")}}\`}
+                    className="flex h-10 items-center justify-center rounded-md font-medium tabular-nums transition-transform duration-150 hover:z-10 hover:scale-110 hover:shadow-md motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-75"
+                    style={{
+                      backgroundColor: \`color-mix(in oklab, \${heatColor} \${Math.round(12 + intensity * 88)}%, var(--muted))\`,
+                      color: intensity > 0.6 ? "white" : "var(--foreground)",
+                      animationDelay: \`\${(r + c) * 30}ms\`,
+                      animationFillMode: "both",
+                    }}
+                  >
+                    ${showValues ? `{${fmt("value")}}` : ""}
+                  </div>
+                )
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="flex items-center justify-end gap-2 text-xs text-muted-foreground tabular-nums">
+        <span>{${fmt("min")}}</span>
+        <span
+          className="h-2 w-32 rounded-full"
+          style={{ background: \`linear-gradient(to right, color-mix(in oklab, \${heatColor} 12%, var(--muted)), \${heatColor})\` }}
+        />
+        <span>{${fmt("max")}}</span>
+      </div>
+    </div>`
+
+  return renderShell({
+    imports: [],
+    configDecl,
+    rowType: buildRowType(fields, rows),
+    rows,
+    helpers: formatter,
+    preReturn: [
+      `const values = data.flatMap((row${isProps ? ": ChartRow" : ""}) => columns.map((column) => row[column]))`,
+      "const numbers = values.filter((value): value is number => typeof value === \"number\")",
+      "const min = numbers.length ? Math.min(...numbers) : 0",
+      "const max = numbers.length ? Math.max(...numbers) : 0",
+    ],
+    jsx,
+    exportMode: options?.exportMode,
+  })
+}
+
 export function generateComponentCode(
   type: ChartType,
   data: ParsedChartData,
@@ -1017,6 +1380,12 @@ export function generateComponentCode(
       return radial(data, options)
     case "kpi":
       return kpi(data, options)
+    case "interactive":
+      return interactive(data, options)
+    case "waterfall":
+      return waterfall(data, options)
+    case "heatmap":
+      return heatmap(data, options)
     default: {
       const exhaustive: never = type
       throw new Error(`Unhandled chart type: ${exhaustive}`)

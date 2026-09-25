@@ -11,8 +11,10 @@ import {
   type ExportHeader,
   type ExportLegendItem,
 } from "@/lib/export-image"
+import { parseCSV } from "@/lib/csv-parser"
 import { BASE_PATH } from "@/lib/seo"
 import { encodeShareConfig } from "@/lib/share"
+import { renderStaticChartSvg } from "@/lib/static-chart-svg"
 import type { ChartOptions, ChartType } from "@/types/chart"
 
 interface ImageExportProps {
@@ -24,6 +26,8 @@ interface ImageExportProps {
   legend: ExportLegendItem[]
   header?: ExportHeader
   footer?: string
+  /** Draw the legend under the chart (for charts whose legend isn't Recharts'). */
+  legendBelow?: boolean
 }
 
 type Copied = "url" | "readme" | null
@@ -38,6 +42,7 @@ export function ImageExport({
   legend,
   header,
   footer,
+  legendBelow,
 }: ImageExportProps) {
   const [copied, setCopied] = useState<Copied>(null)
   const [error, setError] = useState<string | null>(null)
@@ -47,13 +52,26 @@ export function ImageExport({
     if (!container) return
     try {
       setError(null)
-      const { svg, width, height } = buildChartSvg(container, { legend, header, footer })
+      // The heatmap is an HTML grid, not a Recharts SVG, so its image comes
+      // from the static renderer the image URL uses.
+      const { svg, width, height } =
+        type === "heatmap"
+          ? staticSvg(container)
+          : buildChartSvg(container, { legend, header, footer, legendBelow })
       const fileName = `${type}-chart.${format}`
       if (format === "svg") downloadSvg(svg, fileName)
       else await downloadPng(svg, width, height, fileName)
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Export failed")
     }
+  }
+
+  function staticSvg(container: HTMLElement) {
+    const width = Math.round(container.getBoundingClientRect().width)
+    const height = Math.round(container.getBoundingClientRect().height) + 40
+    const theme = document.documentElement.classList.contains("dark") ? "dark" : "light"
+    const svg = renderStaticChartSvg(type, parseCSV(csv), options, { theme, width, height })
+    return { svg, width, height }
   }
 
   async function imageUrl(theme: "light" | "dark") {

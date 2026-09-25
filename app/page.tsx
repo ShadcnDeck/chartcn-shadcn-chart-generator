@@ -38,9 +38,9 @@ const GITHUB_URL = "https://github.com/ShadcnDeck/chartcn";
 const features = [
   {
     icon: LayoutGrid,
-    title: "10 chart types built in",
+    title: "13 chart types built in",
     description:
-      "Bar, Horizontal Bar, Line, Area, Combo, Pie/Donut, Radar, Scatter, Radial/Gauge, and KPI Sparkline cards.",
+      "Bar, Horizontal Bar, Line, Area, Combo, Pie/Donut, Radar, Scatter, Radial/Gauge, KPI Sparkline cards, Interactive Area, Waterfall, and Heatmap.",
   },
   {
     icon: Table2,
@@ -153,7 +153,7 @@ export default function Home() {
 
             <p className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:fill-mode-both max-w-2xl text-lg text-balance text-muted-foreground duration-700 delay-[160ms]">
               An open source shadcn/ui chart component library and generator.
-              Paste a CSV or JSON, preview 10 chart types, then copy the code. No config,
+              Paste a CSV or JSON, preview 13 chart types, then copy the code. No config,
               no account.
             </p>
 
@@ -316,7 +316,7 @@ export default function Home() {
             <p className="max-w-2xl text-muted-foreground">
               Most chart libraries hand you a black box: a new dependency with
               its own design system that never quite matches your app. ChartCN
-              skips that trade-off. Paste a CSV, pick from 10 chart types, and
+              skips that trade-off. Paste a CSV, pick from 13 chart types, and
               copy a self-contained TSX component built on shadcn/ui and
               Recharts, the same primitives your project likely already uses.
               Nothing to install, no account to create, and the code is yours to

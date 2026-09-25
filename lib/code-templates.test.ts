@@ -275,3 +275,53 @@ describe("generateComponentCode: category charts", () => {
     expect(code).toContain("const delta =")
   })
 })
+
+describe("generateComponentCode: interactive, waterfall, heatmap", () => {
+  const daily = parseCSV("Date,Desktop,Mobile\n2024-04-01,10,5\n2024-04-02,12,6\n2024-04-03,9,7")
+
+  it("filters the interactive chart by date range with the chosen default", () => {
+    const code = generateComponentCode("interactive", daily, { defaultRange: "30d" })
+    expect(code).toContain('useState<(typeof RANGES)[number]["value"]>("30d")')
+    expect(code).toContain("new Date(String(row.Date)).getTime() >= newest - (days - 1) * 86_400_000")
+    expect(code).toContain("<Brush key={range}")
+  })
+
+  it("slices the last N rows when the X column isn't dates, and can drop the brush", () => {
+    const code = generateComponentCode("interactive", parseCSV("Week,Visits\nW1,1\nW2,2"), {
+      showBrush: false,
+    })
+    expect(code).toContain("const chartData = days === null ? data : data.slice(-days)")
+    expect(code).not.toContain("Brush")
+  })
+
+  it("computes waterfall steps in the component so live data works", () => {
+    const code = generateComponentCode("waterfall", parseCSV("Step,Change\nStart,100\nChurn,-20"), {
+      exportMode: "props",
+    })
+    expect(code).toContain("function toSteps(rows: ChartRow[]): WaterfallStep[]")
+    expect(code).toContain("const value = row.Change ?? 0")
+    expect(code).toContain('{ label: "Total", change: last.end')
+    expect(code).toContain('<LabelList dataKey="display"')
+  })
+
+  it("omits the waterfall total and labels when turned off", () => {
+    const code = generateComponentCode("waterfall", parseCSV("Step,Change\nStart,100"), {
+      showTotal: false,
+      showValues: false,
+    })
+    expect(code).not.toContain('{ label: "Total", change')
+    expect(code).not.toContain("LabelList")
+  })
+
+  it("renders the heatmap as a dependency-free grid keyed by the real columns", () => {
+    const code = generateComponentCode("heatmap", parseCSV("Cohort,Week 0,Week 1\nJan,100,60"), {
+      heatFormat: "percent",
+      customColors: { heat: "#ff0000" },
+    })
+    expect(code).not.toContain("recharts")
+    expect(code).toContain('const columns = ["Week 0", "Week 1"] as const')
+    expect(code).toContain('const heatColor = "#ff0000"')
+    expect(code).toContain("formatValue(value, max)")
+    expect(code).toContain('role="row"')
+  })
+})

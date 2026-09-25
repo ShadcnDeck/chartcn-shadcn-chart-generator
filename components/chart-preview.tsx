@@ -3,13 +3,16 @@ import { ChartNoAxesColumn } from "lucide-react"
 import { AreaChart } from "@/components/charts/area-chart"
 import { BarChart } from "@/components/charts/bar-chart"
 import { ComboChart } from "@/components/charts/combo-chart"
+import { HeatmapChart } from "@/components/charts/heatmap-chart"
 import { HorizontalBarChart } from "@/components/charts/horizontal-bar-chart"
+import { InteractiveChart } from "@/components/charts/interactive-chart"
 import { KpiChart } from "@/components/charts/kpi-chart"
 import { LineChart } from "@/components/charts/line-chart"
 import { PieChart } from "@/components/charts/pie-chart"
 import { RadarChart } from "@/components/charts/radar-chart"
 import { RadialChart } from "@/components/charts/radial-chart"
 import { ScatterChart } from "@/components/charts/scatter-chart"
+import { WaterfallChart } from "@/components/charts/waterfall-chart"
 import type { ChartOptions, ChartType, ParsedChartData } from "@/types/chart"
 
 interface ChartPreviewProps {
@@ -44,6 +47,12 @@ export function ChartPreview({ type, data, options }: ChartPreviewProps) {
       return <RadialChart data={data} options={options} />
     case "kpi":
       return <KpiChart data={data} options={options} />
+    case "interactive":
+      return <InteractiveChart data={data} options={options} />
+    case "waterfall":
+      return <WaterfallChart data={data} options={options} />
+    case "heatmap":
+      return <HeatmapChart data={data} options={options} />
     default: {
       const exhaustive: never = type
       throw new Error(`Unhandled chart type: ${exhaustive}`)

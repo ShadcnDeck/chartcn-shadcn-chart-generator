@@ -1,6 +1,24 @@
 import { parseCSV } from "@/lib/csv-parser"
 import type { ChartType } from "@/types/chart"
 
+/** 90 days of daily visitors with weekly seasonality and a gentle upward
+ * trend. Deterministic, so server and client render the same sample. */
+function dailyVisitorsCSV(): string {
+  const start = Date.UTC(2024, 3, 1)
+  const lines = ["Date,Desktop,Mobile"]
+  for (let day = 0; day < 90; day++) {
+    const date = new Date(start + day * 86_400_000).toISOString().slice(0, 10)
+    const weekday = new Date(start + day * 86_400_000).getUTCDay()
+    const weekend = weekday === 0 || weekday === 6 ? 0.62 : 1
+    const wave = Math.sin(day / 4.3) * 0.12 + Math.sin(day * 1.7) * 0.06
+    const trend = 1 + day / 180
+    const desktop = Math.round(320 * trend * weekend * (1 + wave))
+    const mobile = Math.round(210 * trend * (weekend === 1 ? 0.9 : 1.25) * (1 - wave / 2))
+    lines.push(`${date},${desktop},${mobile}`)
+  }
+  return lines.join("\n")
+}
+
 export const sampleCSV: Record<ChartType, string> = {
   bar: `Month,Revenue,Expenses
 Jan,42000,31000
@@ -63,6 +81,20 @@ Mar,44100
 Apr,51200
 May,56900
 Jun,61400`,
+  interactive: dailyVisitorsCSV(),
+  waterfall: `Step,Change
+Starting MRR,42000
+New business,8600
+Expansion,3200
+Contraction,-1400
+Churn,-2900`,
+  heatmap: `Cohort,Week 0,Week 1,Week 2,Week 3,Week 4,Week 5
+Jan,100,62,48,41,37,34
+Feb,100,65,51,44,40,
+Mar,100,68,55,47,,
+Apr,100,70,57,,,
+May,100,72,,,,
+Jun,100,,,,,`,
 }
 
 export const chartTypeLabels: Record<ChartType, string> = {
@@ -76,6 +108,9 @@ export const chartTypeLabels: Record<ChartType, string> = {
   radial: "Radial / Gauge Chart",
   "horizontal-bar": "Horizontal Bar Chart",
   kpi: "KPI Sparkline Card",
+  interactive: "Interactive Area Chart",
+  waterfall: "Waterfall Chart",
+  heatmap: "Heatmap",
 }
 
 export const chartTypeDescriptions: Record<ChartType, string> = {
@@ -89,6 +124,9 @@ export const chartTypeDescriptions: Record<ChartType, string> = {
   radial: "Show progress toward a goal per category as concentric rings.",
   "horizontal-bar": "Rank categories with long labels, sorted and labeled at the bar end.",
   kpi: "A headline metric with its change vs. the previous period and a trend sparkline.",
+  interactive: "Daily time series with 7/30/90-day range buttons and a drag-to-zoom brush.",
+  waterfall: "Walk a starting value through increases and decreases to a final total.",
+  heatmap: "A value grid shaded by intensity, e.g. cohort retention or activity by day and hour.",
 }
 
 export const chartTypes: ChartType[] = [
@@ -102,6 +140,9 @@ export const chartTypes: ChartType[] = [
   "scatter",
   "radial",
   "kpi",
+  "interactive",
+  "waterfall",
+  "heatmap",
 ]
 
 function toCamelCase(value: string): string {

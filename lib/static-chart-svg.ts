@@ -20,6 +20,16 @@ import {
   toChartRows,
   toScatterGroups,
 } from "@/lib/chart-data"
+import {
+  WATERFALL_KINDS,
+  computeHeatmap,
+  computeWaterfall,
+  formatHeatValue,
+  heatColor,
+  heatIntensity,
+  heatMix,
+  waterfallColor,
+} from "@/lib/chart-models"
 import { barRadius, comboRenderType, horizontalLabelWidth } from "@/lib/chart-style"
 import type { ChartDataRow, ChartOptions, ChartType, ParsedChartData } from "@/types/chart"
 
@@ -849,6 +859,133 @@ function kpi(data: ParsedChartData, options: ChartOptions, frame: Frame): string
   return `<defs>${gradient("spark-fill", color, 0.5, 0)}</defs>${parts.join("")}`
 }
 
+// ---------------------------------------------------------------- waterfall
+
+function waterfall(data: ParsedChartData, options: ChartOptions, frame: Frame): string {
+  const { width, height, theme } = frame
+  const steps = computeWaterfall(data, options.showTotal ?? true)
+  const showValues = options.showValues ?? true
+  const colors = Object.fromEntries(
+    WATERFALL_KINDS.map(({ key }, i) => [key, toColor(waterfallColor(key, options.customColors), i, theme)])
+  )
+  const legend = WATERFALL_KINDS.map(({ key, label }) => ({ label, color: colors[key] }))
+  const y = niceScale(
+    Math.min(0, ...steps.map((s) => s.range[0])),
+    Math.max(0, ...steps.map((s) => s.range[1]))
+  )
+  const axisWidth = Math.max(...y.ticks.map((t) => textWidth(formatCompactNumber(t)))) + 12
+  const legendH = legendHeight(legend, width)
+  const left = PAD + axisWidth
+  const right = width - PAD
+  const top = frame.top + 24
+  const bottom = height - PAD - legendH - 24
+  const yScale = linear([y.min, y.max], [bottom, top])
+  const band = (right - left) / Math.max(steps.length, 1)
+  const barWidth = Math.min(band * 0.76, 56)
+
+  const parts: string[] = []
+  y.ticks.forEach((t) => {
+    parts.push(
+      `<line x1="${left}" x2="${right}" y1="${r2(yScale(t))}" y2="${r2(yScale(t))}" stroke="${theme.grid}" stroke-dasharray="3 5"/>`,
+      text(left - 8, yScale(t) + 4, formatCompactNumber(t), { fill: theme.muted, "font-size": 12, "text-anchor": "end" })
+    )
+  })
+  steps.forEach((step, i) => {
+    const cx = left + band * (i + 0.5)
+    const y0 = yScale(step.range[1])
+    const h = Math.max(1, yScale(step.range[0]) - y0)
+    parts.push(`<path d="${roundedRect(cx - barWidth / 2, y0, barWidth, h, [4, 4, 4, 4])}" fill="${colors[step.kind]}"/>`)
+    if (showValues) {
+      parts.push(text(cx, y0 - 6, step.display, { fill: theme.foreground, "font-size": 12, "text-anchor": "middle" }))
+    }
+    parts.push(text(cx, bottom + 20, step.label, { fill: theme.muted, "font-size": 12, "text-anchor": "middle" }))
+  })
+  parts.push(renderLegend(legend, width, height - PAD - legendH + 8, theme))
+  return parts.join("")
+}
+
+// ---------------------------------------------------------------- heatmap
+
+/** Mixes `color` into `base` like CSS color-mix for hex colors; any other
+ * format falls back to drawing the heat color at partial opacity. */
+function mixHex(color: string, base: string, share: number): { fill: string; opacity: number } {
+  const hex = (value: string) => {
+    const match = value.match(/^#([0-9a-f]{6})$/i)
+    return match ? [0, 2, 4].map((i) => parseInt(match[1].slice(i, i + 2), 16)) : null
+  }
+  const a = hex(color)
+  const b = hex(base)
+  if (!a || !b) return { fill: color, opacity: share }
+  const mixed = a.map((c, i) => Math.round(c * share + b[i] * (1 - share)))
+  return { fill: `rgb(${mixed.join(",")})`, opacity: 1 }
+}
+
+function heatmap(data: ParsedChartData, options: ChartOptions, frame: Frame): string {
+  const { width, height, theme } = frame
+  const grid = computeHeatmap(data)
+  const color = toColor(heatColor(options.customColors), 0, theme)
+  const showValues = options.showValues ?? true
+  const format = options.heatFormat ?? "number"
+  const fmt = (value: number) => formatHeatValue(value, format, grid.max)
+
+  const labelWidth = Math.max(0, ...grid.rowLabels.map((l) => textWidth(l))) + 12
+  const left = PAD + labelWidth
+  const right = width - PAD
+  const top = frame.top + 22
+  const bottom = height - PAD - 30
+  const gap = 4
+  const cols = Math.max(grid.columnLabels.length, 1)
+  const rowCount = Math.max(grid.rowLabels.length, 1)
+  const cellW = (right - left - gap * (cols - 1)) / cols
+  const cellH = Math.min(40, (bottom - top - gap * (rowCount - 1)) / rowCount)
+  const labelAttrs = { fill: theme.muted, "font-size": 12, "font-weight": 500 }
+
+  const parts: string[] = []
+  grid.columnLabels.forEach((label, c) => {
+    parts.push(
+      text(left + c * (cellW + gap) + cellW / 2, top - 8, label, { ...labelAttrs, "text-anchor": "middle" })
+    )
+  })
+  grid.rowLabels.forEach((label, r) => {
+    const y = top + r * (cellH + gap)
+    parts.push(text(left - 8, y + cellH / 2 + 4, label, { ...labelAttrs, "text-anchor": "end" }))
+    grid.cells[r].forEach((value, c) => {
+      const x = left + c * (cellW + gap)
+      const rect = `x="${r2(x)}" y="${r2(y)}" width="${r2(cellW)}" height="${r2(cellH)}" rx="6"`
+      if (value === null) {
+        parts.push(`<rect ${rect} fill="${theme.track}" fill-opacity="0.4"/>`)
+        return
+      }
+      const intensity = heatIntensity(value, grid.min, grid.max)
+      const { fill, opacity } = mixHex(color, theme.track, heatMix(intensity) / 100)
+      parts.push(`<rect ${rect} fill="${fill}" fill-opacity="${opacity}"/>`)
+      if (showValues) {
+        parts.push(
+          text(x + cellW / 2, y + cellH / 2 + 4, fmt(value), {
+            fill: intensity > 0.6 ? "#ffffff" : theme.foreground,
+            "font-size": 12,
+            "font-weight": 500,
+            "text-anchor": "middle",
+          })
+        )
+      }
+    })
+  })
+
+  // min → max color scale, bottom right
+  const scaleY = top + rowCount * (cellH + gap) + 14
+  const scaleW = 128
+  const scaleX = right - scaleW - textWidth(fmt(grid.max)) - 8
+  const low = mixHex(color, theme.track, heatMix(0) / 100)
+  parts.push(
+    `<defs><linearGradient id="heat-scale" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="${low.fill}"/><stop offset="100%" stop-color="${color}"/></linearGradient></defs>`,
+    text(scaleX - 8, scaleY + 8, fmt(grid.min), { fill: theme.muted, "font-size": 12, "text-anchor": "end" }),
+    `<rect x="${r2(scaleX)}" y="${r2(scaleY)}" width="${scaleW}" height="8" rx="4" fill="url(#heat-scale)"/>`,
+    text(scaleX + scaleW + 8, scaleY + 8, fmt(grid.max), { fill: theme.muted, "font-size": 12 })
+  )
+  return parts.join("")
+}
+
 // ---------------------------------------------------------------- entry
 
 export const DEFAULT_SIZES: Partial<Record<ChartType, { width: number; height: number }>> = {
@@ -856,6 +993,7 @@ export const DEFAULT_SIZES: Partial<Record<ChartType, { width: number; height: n
   radar: { width: 560, height: 460 },
   radial: { width: 480, height: 440 },
   kpi: { width: 480, height: 240 },
+  heatmap: { width: 640, height: 360 },
 }
 
 export function renderStaticChartSvg(
@@ -899,6 +1037,16 @@ export function renderStaticChartSvg(
         break
       case "kpi":
         body = kpi(data, chartOptions, frame)
+        break
+      case "interactive":
+        // A static image can't have range buttons: draw the full series stacked.
+        body = cartesian("area", data, { ...chartOptions, stackMode: "stack" }, frame)
+        break
+      case "waterfall":
+        body = waterfall(data, chartOptions, frame)
+        break
+      case "heatmap":
+        body = heatmap(data, chartOptions, frame)
         break
       default: {
         const exhaustive: never = type

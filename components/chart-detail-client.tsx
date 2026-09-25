@@ -29,6 +29,13 @@ import {
   toChartRows,
   toScatterGroups,
 } from "@/lib/chart-data"
+import {
+  HEAT_KEY,
+  TIME_RANGES,
+  WATERFALL_KINDS,
+  heatColor,
+  waterfallColor,
+} from "@/lib/chart-models"
 import { comboRenderType } from "@/lib/chart-style"
 import { parseCSV, toCSV, validateColumnsForType } from "@/lib/csv-parser"
 import { decodeShareConfig } from "@/lib/share"
@@ -90,6 +97,16 @@ export function ChartDetailClient({ type }: ChartDetailClientProps) {
           color: resolveColor(category, index, options.customColors),
         }
       })
+    }
+    if (type === "waterfall") {
+      return WATERFALL_KINDS.map(({ key, label }) => ({
+        key,
+        label,
+        color: waterfallColor(key, options.customColors),
+      }))
+    }
+    if (type === "heatmap") {
+      return [{ key: HEAT_KEY, label: "Heat color", color: heatColor(options.customColors) }]
     }
     if (type === "scatter") {
       return toScatterGroups(data, options.customColors).map(({ key, label, color }) => ({
@@ -217,6 +234,7 @@ export function ChartDetailClient({ type }: ChartDetailClientProps) {
                 csv={csvText}
                 options={options}
                 legend={colorPickerItems}
+                legendBelow={type === "waterfall"}
                 header={kpiExport?.header}
                 footer={kpiExport?.footer}
               />
@@ -467,6 +485,72 @@ function ChartVariantToggles({
           onChange={(shape) => onChange({ ...options, halfGauge: shape === "half" })}
         />
       </ControlGroup>
+    )
+  }
+
+  if (type === "interactive") {
+    return (
+      <div className="flex flex-wrap items-end gap-4">
+        <ControlGroup label="Default range">
+          <Segmented
+            value={options.defaultRange ?? "90d"}
+            items={TIME_RANGES.map(({ value, label }) => ({ value, label }))}
+            onChange={(defaultRange) => onChange({ ...options, defaultRange })}
+          />
+        </ControlGroup>
+        <ControlGroup label="Zoom">
+          <Toggle
+            pressed={options.showBrush ?? true}
+            onPressedChange={(showBrush) => onChange({ ...options, showBrush })}
+          >
+            Brush
+          </Toggle>
+        </ControlGroup>
+        {tooltip}
+      </div>
+    )
+  }
+
+  if (type === "waterfall") {
+    return (
+      <ControlGroup label="Show">
+        <Toggle
+          pressed={options.showTotal ?? true}
+          onPressedChange={(showTotal) => onChange({ ...options, showTotal })}
+        >
+          Total bar
+        </Toggle>
+        <Toggle
+          pressed={options.showValues ?? true}
+          onPressedChange={(showValues) => onChange({ ...options, showValues })}
+        >
+          Values
+        </Toggle>
+      </ControlGroup>
+    )
+  }
+
+  if (type === "heatmap") {
+    return (
+      <div className="flex flex-wrap items-end gap-4">
+        <ControlGroup label="Values">
+          <Segmented
+            value={options.showValues === false ? "hidden" : (options.heatFormat ?? "number")}
+            items={[
+              { value: "number", label: "Number" },
+              { value: "percent", label: "Percent" },
+              { value: "hidden", label: "Hidden" },
+            ]}
+            onChange={(value) =>
+              onChange(
+                value === "hidden"
+                  ? { ...options, showValues: false }
+                  : { ...options, showValues: true, heatFormat: value }
+              )
+            }
+          />
+        </ControlGroup>
+      </div>
     )
   }
 

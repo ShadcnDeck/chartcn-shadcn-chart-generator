@@ -5,9 +5,9 @@ import { ChartCard } from "@/components/chart-card"
 import { chartTypes } from "@/lib/sample-data"
 
 export const metadata: Metadata = {
-  title: "Chart Gallery: 10 Shadcn UI Chart Types",
+  title: "Chart Gallery: 13 Shadcn UI Chart Types",
   description:
-    "Browse all 10 shadcn/ui chart types: bar, horizontal bar, line, area, combo, pie, radar, scatter, radial, and KPI sparkline. Preview live sample data, then paste your own CSV or JSON to generate the component.",
+    "Browse all 13 shadcn/ui chart types: bar, horizontal bar, line, area, combo, pie, radar, scatter, radial, KPI sparkline, interactive area, waterfall, and heatmap. Preview live sample data, then paste your own CSV or JSON to generate the component.",
   alternates: {
     canonical: "/charts",
   },

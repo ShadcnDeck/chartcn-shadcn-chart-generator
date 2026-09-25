@@ -166,6 +166,7 @@ const COLUMN_REQUIREMENTS: Partial<
   radial: { count: 2, hint: "Category,Value", name: "Radial" },
   scatter: { count: 3, hint: "Category,X,Y", name: "Scatter" },
   kpi: { count: 2, hint: "Period,Value", name: "KPI" },
+  waterfall: { count: 2, hint: "Step,Change", name: "Waterfall" },
 }
 
 /** Warns when a chart type's fixed CSV shape (e.g. pie/radial's Category,Value or
