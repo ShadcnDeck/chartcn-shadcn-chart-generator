@@ -2,7 +2,9 @@ import type { Metadata } from "next"
 
 import { BreadcrumbChip } from "@/components/breadcrumb-chip"
 import { ChartCard } from "@/components/chart-card"
+import { JsonLd } from "@/components/json-ld"
 import { chartTypes } from "@/lib/sample-data"
+import { gallerySchema } from "@/lib/schema"
 
 export const metadata: Metadata = {
   title: "Chart Gallery: 13 Shadcn UI Chart Types",
@@ -31,6 +33,7 @@ export default function ChartsGallery() {
           <ChartCard key={type} type={type} />
         ))}
       </div>
+      <JsonLd data={gallerySchema()} />
     </main>
   )
 }

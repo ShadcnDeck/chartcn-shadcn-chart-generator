@@ -2,9 +2,7 @@ import Link from "next/link"
 
 import { ShadcnDeckLogo } from "@/components/shadcndeck-logo"
 import { ThemeToggle } from "@/components/theme-toggle"
-
-const GITHUB_URL = "https://github.com/ShadcnDeck/chartcn"
-const SHADCNDECK_URL = "https://shadcndeck.com"
+import { GITHUB_URL, ORGANIZATION_URL as SHADCNDECK_URL } from "@/lib/seo"
 
 export function SiteHeader() {
   return (
@@ -21,14 +19,14 @@ export function SiteHeader() {
               </Link>
               <a
                 href={SHADCNDECK_URL}
-                className="text-base text-muted-foreground transition-colors hover:text-foreground hover:underline"
+                className="hidden text-base text-muted-foreground transition-colors hover:text-foreground hover:underline sm:inline"
               >
                 by ShadcnDeck
               </a>
             </span>
           </div>
 
-          <nav className="flex items-center gap-6">
+          <nav className="flex items-center gap-4 sm:gap-6">
             <Link
               href="/charts"
               className="text-sm text-muted-foreground transition-colors hover:text-foreground"

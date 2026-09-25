@@ -51,9 +51,16 @@ const CATEGORY_COLOR_TYPES = new Set<ChartType>(["pie", "radial"])
 
 type InputTab = "paste" | "upload" | "table"
 
+/** Reads the `?c=` share param. useSearchParams makes this subtree render on
+ * the client only, so the page passes `<ChartDetail shareParam={null} />` as
+ * the Suspense fallback: the prerendered HTML (what crawlers see) still has
+ * the whole tool with sample data and its generated code. */
 export function ChartDetailClient({ type }: ChartDetailClientProps) {
-  const searchParams = useSearchParams()
-  const shareParam = searchParams.get("c")
+  const shareParam = useSearchParams().get("c")
+  return <ChartDetail type={type} shareParam={shareParam} />
+}
+
+export function ChartDetail({ type, shareParam }: { type: ChartType; shareParam: string | null }) {
   const previewRef = useRef<HTMLDivElement>(null)
 
   const [data, setData] = useState<ParsedChartData>(() => parseCSV(sampleCSV[type]))
@@ -244,7 +251,7 @@ export function ChartDetailClient({ type }: ChartDetailClientProps) {
 
         <Card className="min-w-0 gap-0 overflow-hidden py-0">
           <div className="flex items-center justify-between border-b border-border bg-muted/40 px-4 py-2.5">
-            <h2 className="font-mono text-xs text-muted-foreground">chart.tsx</h2>
+            <span className="font-mono text-xs text-muted-foreground">chart.tsx</span>
             <CopyButton getText={() => code} />
           </div>
           <CodeBlock code={code} />

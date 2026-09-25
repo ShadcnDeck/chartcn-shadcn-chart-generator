@@ -18,22 +18,19 @@ import {
 
 import { ChartPreview } from "@/components/chart-preview";
 import { CopyButton } from "@/components/copy-button";
+import { FaqList } from "@/components/faq-list";
 import { InteractiveGrid } from "@/components/interactive-grid";
+import { JsonLd } from "@/components/json-ld";
 import { Reveal } from "@/components/reveal";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { parseCSV } from "@/lib/csv-parser";
 import { faqs } from "@/lib/faq";
 import { sampleCSV } from "@/lib/sample-data";
+import { homeSchema } from "@/lib/schema";
+import { GITHUB_URL } from "@/lib/seo";
 
-const GITHUB_URL = "https://github.com/ShadcnDeck/chartcn";
 
 const features = [
   {
@@ -91,19 +88,6 @@ const features = [
       "Copy one self-contained TSX component, no new dependency beyond shadcn/ui and Recharts.",
   },
 ];
-
-const faqSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqs.map((faq) => ({
-    "@type": "Question",
-    name: faq.question,
-    acceptedAnswer: {
-      "@type": "Answer",
-      text: faq.answer,
-    },
-  })),
-};
 
 const chartLinks = [
   { type: "bar", label: "Bar", icon: BarChart3 },
@@ -376,30 +360,12 @@ export default function Home() {
             </h2>
           </Reveal>
           <Reveal className="mt-8">
-            <Accordion className="mx-auto max-w-2xl gap-3 rounded-2xl bg-muted/60 p-3 sm:p-4">
-              {faqs.map((faq) => (
-                <AccordionItem
-                  key={faq.question}
-                  value={faq.question}
-                  className="rounded-xl border border-border bg-card px-5"
-                >
-                  <AccordionTrigger className="text-base">
-                    {faq.question}
-                  </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground">
-                    {faq.answer}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
+            <FaqList faqs={faqs} className="mx-auto max-w-2xl" />
           </Reveal>
         </section>
       </div>
 
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-      />
+      <JsonLd data={homeSchema(faqs)} />
     </main>
   );
 }
