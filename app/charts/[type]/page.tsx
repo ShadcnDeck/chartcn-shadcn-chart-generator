@@ -140,7 +140,7 @@ export default async function ChartDetailPage({ params }: ChartDetailPageProps) 
             <h2 id="data-format" className="text-xl font-semibold tracking-tight">
               Data format
             </h2>
-            <ul className="flex list-disc flex-col gap-1.5 pl-5 text-muted-foreground">
+            <ul className="flex list-disc flex-col gap-1.5 pl-5 text-muted-foreground marker:text-primary">
               {seo.dataNotes.map((note) => (
                 <li key={note}>{note}</li>
               ))}
