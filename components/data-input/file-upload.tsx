@@ -4,16 +4,16 @@ import { useRef, useState } from "react"
 import { UploadCloud } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { parseCSV } from "@/lib/csv-parser"
-import type { ParsedChartData } from "@/types/chart"
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024 // 2MB
+const ACCEPTED_EXTENSIONS = [".csv", ".tsv", ".txt", ".json", ".md"]
 
-interface CsvUploadProps {
-  onParsed: (data: ParsedChartData) => void
+interface FileUploadProps {
+  /** Receives the file's text; format detection happens downstream. */
+  onText: (text: string) => void
 }
 
-export function CsvUpload({ onParsed }: CsvUploadProps) {
+export function FileUpload({ onText }: FileUploadProps) {
   const [fileName, setFileName] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
@@ -22,8 +22,9 @@ export function CsvUpload({ onParsed }: CsvUploadProps) {
   function handleFile(file: File | undefined) {
     if (!file) return
 
-    if (!file.name.toLowerCase().endsWith(".csv")) {
-      setError("Only .csv files are supported.")
+    const name = file.name.toLowerCase()
+    if (!ACCEPTED_EXTENSIONS.some((ext) => name.endsWith(ext))) {
+      setError(`Supported files: ${ACCEPTED_EXTENSIONS.join(", ")}`)
       return
     }
     if (file.size > MAX_FILE_SIZE) {
@@ -34,10 +35,8 @@ export function CsvUpload({ onParsed }: CsvUploadProps) {
     setError(null)
     const reader = new FileReader()
     reader.onload = () => {
-      const text = String(reader.result ?? "")
-      const parsed = parseCSV(text)
       setFileName(file.name)
-      onParsed(parsed)
+      onText(String(reader.result ?? ""))
     }
     reader.readAsText(file)
   }
@@ -45,7 +44,15 @@ export function CsvUpload({ onParsed }: CsvUploadProps) {
   return (
     <div className="flex flex-col gap-2">
       <div
+        role="button"
+        tabIndex={0}
         onClick={() => inputRef.current?.click()}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault()
+            inputRef.current?.click()
+          }
+        }}
         onDragOver={(e) => {
           e.preventDefault()
           setIsDragging(true)
@@ -57,17 +64,17 @@ export function CsvUpload({ onParsed }: CsvUploadProps) {
           handleFile(e.dataTransfer.files[0])
         }}
         className={cn(
-          "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-8 text-center text-sm text-muted-foreground transition-colors",
-          isDragging ? "border-primary bg-accent" : "border-border"
+          "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-8 text-center text-sm text-muted-foreground transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+          isDragging ? "border-primary bg-accent" : "border-border hover:border-primary/40"
         )}
       >
-        <UploadCloud className="size-6" />
-        <p>Drag and drop a .csv file here, or click to browse</p>
-        <p className="text-xs">Max 2MB</p>
+        <UploadCloud className={cn("size-6 transition-transform", isDragging && "-translate-y-0.5 scale-110")} />
+        <p>Drag and drop a file here, or click to browse</p>
+        <p className="text-xs">CSV, TSV, JSON, or Markdown table · Max 2MB</p>
         <input
           ref={inputRef}
           type="file"
-          accept=".csv"
+          accept={ACCEPTED_EXTENSIONS.join(",")}
           className="hidden"
           onChange={(e) => handleFile(e.target.files?.[0])}
         />

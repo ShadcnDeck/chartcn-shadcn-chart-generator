@@ -11,6 +11,8 @@ const scatterData = parseCSV("Segment,Spend,Conversions\nSearch,100,10\nSocial,2
 describe("generateComponentCode: chart type coverage", () => {
   const cases: [ChartType, ReturnType<typeof parseCSV>][] = [
     ["bar", barData],
+    ["horizontal-bar", barData],
+    ["kpi", pieData],
     ["line", barData],
     ["area", barData],
     ["combo", barData],
@@ -65,16 +67,16 @@ describe("generateComponentCode: bar/area stack modes", () => {
 describe("generateComponentCode: combo per-series render type", () => {
   it("defaults the first series to Bar and the rest to Line", () => {
     const code = generateComponentCode("combo", barData)
-    expect(code).toContain("<Bar dataKey=\"series_Revenue\"")
-    expect(code).toContain("<Line dataKey=\"series_Expenses\"")
+    expect(code).toContain("<Bar dataKey=\"Revenue\"")
+    expect(code).toContain("<Line dataKey=\"Expenses\"")
   })
 
   it("honors an explicit seriesRenderType override", () => {
     const code = generateComponentCode("combo", barData, {
       seriesRenderType: { series_Revenue: "line", series_Expenses: "bar" },
     })
-    expect(code).toContain("<Line dataKey=\"series_Revenue\"")
-    expect(code).toContain("<Bar dataKey=\"series_Expenses\"")
+    expect(code).toContain("<Line dataKey=\"Revenue\"")
+    expect(code).toContain("<Bar dataKey=\"Expenses\"")
   })
 })
 
@@ -141,4 +143,135 @@ describe("generateComponentCode: chartConfig typing (dynamic-index safety)", () 
       }
     }
   )
+})
+
+describe("generateComponentCode: real column names", () => {
+  it("keys inline rows, dataKeys, and chartConfig by the CSV headers", () => {
+    const code = generateComponentCode("bar", barData)
+    expect(code).toContain('{ Month: "Jan", Revenue: 100, Expenses: 50 },')
+    expect(code).toContain('<XAxis dataKey="Month"')
+    expect(code).toContain('<Bar dataKey="Revenue"')
+    expect(code).toContain('Revenue: { label: "Revenue", color: "var(--chart-1)" },')
+    expect(code).toContain('stopColor="var(--color-Revenue)"')
+    expect(code).not.toContain("series_")
+  })
+
+  it("types props-mode rows with the real keys", () => {
+    const code = generateComponentCode("line", barData, { exportMode: "props" })
+    expect(code).toContain(
+      "export type ChartRow = { Month: string; Revenue: number | null; Expenses: number | null }"
+    )
+    expect(code).toContain("data: ChartRow[]")
+  })
+
+  it("quotes keys that aren't identifiers and inlines colors CSS can't reference", () => {
+    const data = parseCSV("Month,Product A\nJan,1")
+    const code = generateComponentCode("area", data)
+    expect(code).toContain('{ Month: "Jan", "Product A": 1 },')
+    expect(code).toContain('"Product A": { label: "Product A", color: "var(--chart-1)" },')
+    expect(code).toContain('<Area dataKey="Product A"')
+    expect(code).toContain('stroke="var(--chart-1)"')
+    expect(code).not.toContain("--color-Product A")
+  })
+
+  it("renames keys Recharts would read as paths (dots, brackets)", () => {
+    const data = parseCSV("Month,v1.2\nJan,1")
+    const code = generateComponentCode("bar", data)
+    expect(code).toContain('<Bar dataKey="v1_2"')
+    expect(code).toContain('v1_2: { label: "v1.2"')
+  })
+
+  it("escapes quotes and backslashes in headers", () => {
+    const data = parseCSV('"Na""me","Rev""enue \\\\"\nA,1')
+    const code = generateComponentCode("bar", data)
+    expect(code).toContain('dataKey={"Rev\\"enue \\\\\\\\"}')
+    expect(code).toContain('label: "Rev\\"enue \\\\\\\\"')
+  })
+
+  it("keeps numeric X values numeric (e.g. JSON years)", () => {
+    const data = { headers: ["year", "sales"], rows: [{ year: 2024, sales: 1 }] }
+    const code = generateComponentCode("bar", data, { exportMode: "props" })
+    expect(code).toContain("{ year: number; sales: number | null }")
+  })
+})
+
+describe("generateComponentCode: tooltip parity with the preview", () => {
+  it("embeds the breakdown tooltip for multi-series charts by default", () => {
+    const code = generateComponentCode("bar", barData)
+    expect(code).toContain("function ChartBreakdownTooltip(")
+    expect(code).toContain("content={<ChartBreakdownTooltip config={chartConfig} />}")
+    expect(code).not.toContain("ChartTooltipContent")
+  })
+
+  it("uses shadcn's tooltip when switched to simple, or with one series", () => {
+    expect(generateComponentCode("bar", barData, { tooltipStyle: "simple" })).not.toContain(
+      "ChartBreakdownTooltip"
+    )
+    expect(generateComponentCode("bar", parseCSV("Month,Revenue\nJan,1"))).not.toContain(
+      "ChartBreakdownTooltip"
+    )
+  })
+})
+
+describe("generateComponentCode: bar styling", () => {
+  it("rounds only the top segment of a stack", () => {
+    const code = generateComponentCode("bar", barData, { stackMode: "stack" })
+    expect(code).toContain("fill={`url(#${uid}-fill-0)`} />} maxBarSize")
+    expect(code).toContain("fill={`url(#${uid}-fill-1)`} />} radius={[4, 4, 0, 0]}")
+  })
+
+  it("keeps the Bar fill a plain color so legend swatches work", () => {
+    const code = generateComponentCode("bar", barData)
+    expect(code).toContain(
+      '<Bar dataKey="Revenue" fill="var(--color-Revenue)" shape={(props) => <Rectangle'
+    )
+  })
+
+  it("scopes gradient ids with useId", () => {
+    const code = generateComponentCode("bar", barData)
+    expect(code).toContain('import { useId } from "react"')
+    expect(code).toContain("id={`${uid}-fill-0`}")
+  })
+})
+
+describe("generateComponentCode: horizontal bar", () => {
+  const data = parseCSV("Framework,Stars\nVue,2\nReact,3\nSolid,1")
+
+  it("bakes sorted rows into inline data", () => {
+    const code = generateComponentCode("horizontal-bar", data, { sortBars: "desc" })
+    const order = ["React", "Vue", "Solid"].map((name) => code.indexOf(`Framework: "${name}"`))
+    expect(order).toEqual([...order].sort((a, b) => a - b))
+    expect(code).toContain('layout="vertical"')
+    expect(code).toContain("<LabelList")
+  })
+
+  it("sorts at render time in props mode", () => {
+    const code = generateComponentCode("horizontal-bar", data, {
+      sortBars: "asc",
+      exportMode: "props",
+    })
+    expect(code).toContain("const chartData = [...data].sort((a, b) => (a.Stars ?? 0) - (b.Stars ?? 0))")
+    expect(code).toContain("data={chartData}")
+  })
+})
+
+describe("generateComponentCode: category charts", () => {
+  it("drops blank slices from pie data, like the preview", () => {
+    const code = generateComponentCode("pie", parseCSV("Browser,Visitors\nChrome,3\nSafari,"))
+    expect(code).toContain('{ Browser: "Chrome", Visitors: 3 },')
+    expect(code).not.toContain('Browser: "Safari"')
+    expect(code).toContain('nameKey="Browser"')
+  })
+
+  it("emits flat scatter rows grouped at render time", () => {
+    const code = generateComponentCode("scatter", scatterData)
+    expect(code).toContain('{ Segment: "Search", Spend: 100, Conversions: 10 },')
+    expect(code).toContain("const groups = [...new Set(data.map((row) => String(row.Segment)))]")
+  })
+
+  it("computes the KPI delta from the data at render time", () => {
+    const code = generateComponentCode("kpi", parseCSV("Month,MRR\nJan,100\nFeb,120"))
+    expect(code).toContain("const values = data.map((row) => row.MRR)")
+    expect(code).toContain("const delta =")
+  })
 })

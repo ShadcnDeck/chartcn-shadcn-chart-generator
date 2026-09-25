@@ -1,14 +1,19 @@
 "use client"
 
-import { Cell, Label, Pie, PieChart as RechartsPieChart, type PieLabelRenderProps } from "recharts"
+import {
+  Label,
+  Pie,
+  PieChart as RechartsPieChart,
+  type PieLabelRenderProps,
+} from "recharts"
 
 import {
-  ChartConfig,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
+  type ChartConfig,
 } from "@/components/ui/chart"
 import { formatCompactNumber, getSeries, resolveColor, toChartRows } from "@/lib/chart-data"
 import type { ChartOptions, ParsedChartData } from "@/types/chart"
@@ -35,14 +40,22 @@ export function PieChart({ data, options }: PieChartProps) {
     }
   })
 
+  // Per-slice colors ride on the rows (Recharts reads `fill` from each
+  // entry), which also gives the legend its swatches.
+  const coloredRows = rows.map((row) => ({
+    ...row,
+    fill: chartConfig[String(row.category)]?.color,
+  }))
+
   const labelType = options?.labelType ?? "value"
+  const donut = options?.donut ?? false
 
   const renderLabel = (props: PieLabelRenderProps) => {
     if (labelType === "percent") {
       return `${Math.round((props.percent ?? 0) * 100)}%`
     }
     if (labelType === "label") {
-      return String(props.payload?.category ?? "")
+      return String(props.name ?? "")
     }
     return String(props.value ?? "")
   }
@@ -50,26 +63,27 @@ export function PieChart({ data, options }: PieChartProps) {
   return (
     <ChartContainer
       config={chartConfig}
-      className="aspect-square h-[350px] w-full [&_.recharts-text]:fill-foreground"
+      className="aspect-square h-[350px] w-full [&_.recharts-pie-label-text]:fill-foreground"
     >
       <RechartsPieChart>
         <ChartTooltip content={<ChartTooltipContent nameKey="category" hideLabel />} />
-        <ChartLegend content={<ChartLegendContent nameKey="category" />} verticalAlign="bottom" />
+        <ChartLegend
+          content={<ChartLegendContent nameKey="category" />}
+          verticalAlign="bottom"
+          itemSorter={null}
+        />
         <Pie
-          data={rows}
+          data={coloredRows}
           dataKey={valueKey}
           nameKey="category"
-          label={options?.donut ? undefined : renderLabel}
-          innerRadius={options?.donut ? 64 : 0}
-          strokeWidth={4}
+          label={donut ? undefined : renderLabel}
+          innerRadius={donut ? 64 : 0}
+          paddingAngle={donut ? 2 : 0}
+          cornerRadius={donut ? 6 : 0}
+          stroke="var(--card)"
+          strokeWidth={2}
         >
-          {rows.map((row, index) => (
-            <Cell
-              key={`${row.category}-${index}`}
-              fill={chartConfig[String(row.category)]?.color}
-            />
-          ))}
-          {options?.donut && (
+          {donut && (
             <Label
               content={({ viewBox }) => {
                 if (!viewBox || !("cx" in viewBox) || !("cy" in viewBox)) return null

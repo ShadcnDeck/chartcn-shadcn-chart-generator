@@ -2,12 +2,14 @@ import Link from "next/link"
 import {
   AreaChart,
   BarChart3,
+  ChartBarBig,
   ChartNoAxesCombined,
   Gauge,
   LineChart,
   PieChart,
   Radar,
   ScatterChart,
+  TrendingUp,
   type LucideIcon,
 } from "lucide-react"
 
@@ -32,6 +34,7 @@ interface ChartCardProps {
 
 const chartIcons: Record<ChartType, LucideIcon> = {
   bar: BarChart3,
+  "horizontal-bar": ChartBarBig,
   line: LineChart,
   area: AreaChart,
   combo: ChartNoAxesCombined,
@@ -39,6 +42,7 @@ const chartIcons: Record<ChartType, LucideIcon> = {
   radar: Radar,
   scatter: ScatterChart,
   radial: Gauge,
+  kpi: TrendingUp,
 }
 
 export function ChartCard({ type }: ChartCardProps) {

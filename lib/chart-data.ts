@@ -48,6 +48,99 @@ export function toChartRows(data: ParsedChartData): ChartDataRow[] {
   })
 }
 
+/** A column as it appears in *generated* code: the user's own header/field
+ * name wherever Recharts and CSS can take it, so the exported component
+ * accepts their API/database rows as-is. `internalKey` is the sanitized key
+ * the live preview (and saved customColors) use. */
+export interface ExportField {
+  key: string
+  label: string
+  internalKey: string
+  /** True when `--color-<key>` is a valid CSS custom property name, so the
+   * generated code can reference `var(--color-<key>)`. Otherwise it inlines
+   * the resolved color. */
+  cssSafe: boolean
+}
+
+// Recharts resolves string dataKeys as lodash-style paths, so "a.b" or "a[0]"
+// would read a nested value instead of the literal key.
+const RECHARTS_PATH_CHARS = /[.[\]]/
+const CSS_IDENT_CHARS = /^[A-Za-z0-9_-]+$/
+const JS_IDENTIFIER = /^[A-Za-z_$][\w$]*$/
+
+function toExportKey(header: string, fallback: string, used: Set<string>): string {
+  let key = header.trim()
+  if (!key || RECHARTS_PATH_CHARS.test(key)) {
+    key =
+      key
+        .replace(/[^a-zA-Z0-9]+/g, "_")
+        .replace(/^_+|_+$/g, "") || fallback
+  }
+  let unique = key
+  for (let n = 2; used.has(unique); n++) unique = `${key}_${n}`
+  used.add(unique)
+  return unique
+}
+
+/** Category + series fields keyed by the user's real column names. */
+export function getExportFields(data: ParsedChartData): {
+  category: ExportField
+  series: ExportField[]
+} {
+  const used = new Set<string>()
+  const categoryKey = toExportKey(data.headers[0] ?? "", CATEGORY_KEY, used)
+  const category: ExportField = {
+    key: categoryKey,
+    label: data.headers[0] ?? CATEGORY_KEY,
+    internalKey: CATEGORY_KEY,
+    cssSafe: CSS_IDENT_CHARS.test(categoryKey),
+  }
+  const series = getSeries(data).map(({ key: internalKey, label }, index) => {
+    const key = toExportKey(label, `value${index + 1}`, used)
+    return { key, label, internalKey, cssSafe: CSS_IDENT_CHARS.test(key) }
+  })
+  return { category, series }
+}
+
+/** Rows keyed by export field names, i.e. the shape the generated component expects. */
+export function toExportRows(data: ParsedChartData): ChartDataRow[] {
+  const { category, series } = getExportFields(data)
+  const categoryHeader = data.headers[0]
+  return data.rows.map((row) => {
+    const mapped: ChartDataRow = { [category.key]: row[categoryHeader] ?? null }
+    series.forEach(({ key, label }) => {
+      mapped[key] = row[label] ?? null
+    })
+    return mapped
+  })
+}
+
+/** Object-literal / type-literal property name: bare when it's a valid JS
+ * identifier, quoted otherwise (e.g. "Product A"). */
+export function toPropertyKey(key: string): string {
+  return JS_IDENTIFIER.test(key) ? key : JSON.stringify(key)
+}
+
+/** Property access expression, e.g. `row.revenue` or `row["Product A"]`. */
+export function toPropertyAccess(object: string, key: string): string {
+  return JS_IDENTIFIER.test(key) ? `${object}.${key}` : `${object}[${JSON.stringify(key)}]`
+}
+
+/** The breakdown tooltip only makes sense with more than one series. */
+export function usesBreakdownTooltip(seriesCount: number, style?: "breakdown" | "simple"): boolean {
+  return seriesCount > 1 && (style ?? "breakdown") === "breakdown"
+}
+
+const SAFE_COLOR_RE =
+  /^(#[0-9a-fA-F]{3,8}|(rgb|rgba|hsl|hsla|oklch|oklab)\([0-9.,%\s/+-]+\)|var\(--chart-\d\))$/
+
+/** True for colors that are safe to drop into CSS or an SVG attribute: hex,
+ * numeric color functions, or a palette variable. Custom colors arrive from
+ * share links, which anyone can craft. */
+export function isSafeColor(value: unknown): value is string {
+  return typeof value === "string" && SAFE_COLOR_RE.test(value.trim())
+}
+
 /** Custom color for `key` if one was picked in the UI, else the default palette color. */
 export function resolveColor(
   key: string,
@@ -187,6 +280,64 @@ export function computeGrowth(data: ParsedChartData): number | null {
   if (!Number.isFinite(first) || !Number.isFinite(last) || first === 0) return null
 
   return ((last - first) / Math.abs(first)) * 100
+}
+
+export interface KpiSummary {
+  label: string
+  latest: number | null
+  previous: number | null
+  /** Percent change from `previous` to `latest`, null when not computable. */
+  delta: number | null
+  firstCategory: string
+  lastCategory: string
+}
+
+/** Headline numbers for the KPI card: the latest value of the first series
+ * and its change vs. the previous non-blank value. */
+export function computeKpi(data: ParsedChartData): KpiSummary {
+  const series = getSeries(data)[0]
+  const rows = toChartRows(data)
+  const values = series
+    ? rows
+        .map((row) => row[series.key])
+        .filter((value): value is number => typeof value === "number" && Number.isFinite(value))
+    : []
+  const latest = values.length > 0 ? values[values.length - 1] : null
+  const previous = values.length > 1 ? values[values.length - 2] : null
+  const delta =
+    latest !== null && previous !== null && previous !== 0
+      ? ((latest - previous) / Math.abs(previous)) * 100
+      : null
+
+  return {
+    label: series?.label ?? "",
+    latest,
+    previous,
+    delta,
+    firstCategory: String(rows[0]?.[CATEGORY_KEY] ?? ""),
+    lastCategory: String(rows[rows.length - 1]?.[CATEGORY_KEY] ?? ""),
+  }
+}
+
+/** Rows ordered by their first series value, for ranked horizontal bars. */
+export function sortRowsByFirstSeries(
+  rows: ChartDataRow[],
+  key: string | undefined,
+  order: "none" | "desc" | "asc" = "none"
+): ChartDataRow[] {
+  if (order === "none" || !key) return rows
+  const sign = order === "desc" ? -1 : 1
+  return [...rows].sort((a, b) => sign * (Number(a[key] ?? 0) - Number(b[key] ?? 0)))
+}
+
+/** Radial bars are drawn against at least 0–100, so percentages read as
+ * progress toward a goal; larger values scale to the biggest one. */
+export function radialDomainMax(values: number[]): number {
+  return Math.max(100, ...values.filter((value) => Number.isFinite(value)))
+}
+
+export function formatPercentTick(value: number): string {
+  return new Intl.NumberFormat("en-US", { style: "percent" }).format(value)
 }
 
 export function formatCompactNumber(value: number): string {

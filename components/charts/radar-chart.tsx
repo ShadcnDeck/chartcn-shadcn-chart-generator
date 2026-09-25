@@ -30,20 +30,24 @@ export function RadarChart({ data, options }: RadarChartProps) {
   return (
     <ChartContainer config={chartConfig} className="aspect-square h-[350px] w-full">
       <RechartsRadarChart data={rows}>
-        <ChartTooltip content={<ChartTooltipContent />} />
-        <PolarAngleAxis dataKey={CATEGORY_KEY} />
-        <PolarGrid />
+        <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
+        <PolarAngleAxis
+          dataKey={CATEGORY_KEY}
+          tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
+        />
+        <PolarGrid strokeDasharray="3 5" />
         {series.map(({ key }) => (
           <Radar
             key={key}
             dataKey={key}
             fill={`var(--color-${key})`}
-            fillOpacity={0.35}
+            fillOpacity={0.25}
             stroke={`var(--color-${key})`}
             strokeWidth={2}
+            dot={{ r: 3, fillOpacity: 1 }}
           />
         ))}
-        <ChartLegend content={<ChartLegendContent />} />
+        <ChartLegend content={<ChartLegendContent />} itemSorter={null} />
       </RechartsRadarChart>
     </ChartContainer>
   )

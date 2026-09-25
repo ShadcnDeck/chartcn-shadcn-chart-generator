@@ -1,24 +1,31 @@
 "use client"
 
-import { Area, AreaChart as RechartsAreaChart, CartesianGrid, XAxis, YAxis } from "recharts"
+import { useId } from "react"
+import {
+  Area,
+  AreaChart as RechartsAreaChart,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+} from "recharts"
 
-import { ChartBreakdownTooltip } from "@/components/charts/chart-breakdown-tooltip"
+import { SeriesTooltip } from "@/components/charts/series-tooltip"
 import {
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
 } from "@/components/ui/chart"
 import {
   CATEGORY_KEY,
   buildChartConfig,
   formatCompactNumber,
   formatDateTick,
+  formatPercentTick,
   getSeries,
   isDateAxis,
   toChartRows,
 } from "@/lib/chart-data"
+import { SERIES_STAGGER_MS } from "@/lib/chart-style"
 import type { ChartOptions, ParsedChartData } from "@/types/chart"
 
 interface AreaChartProps {
@@ -27,6 +34,7 @@ interface AreaChartProps {
 }
 
 export function AreaChart({ data, options }: AreaChartProps) {
+  const uid = useId().replace(/[^\w-]/g, "")
   const series = getSeries(data)
   const chartConfig = buildChartConfig(data, options?.customColors)
   const rows = toChartRows(data)
@@ -41,8 +49,8 @@ export function AreaChart({ data, options }: AreaChartProps) {
         stackOffset={stackMode === "percent" ? "expand" : undefined}
       >
         <defs>
-          {series.map(({ key }) => (
-            <linearGradient key={key} id={`fill-${key}`} x1="0" y1="0" x2="0" y2="1">
+          {series.map(({ key }, index) => (
+            <linearGradient key={key} id={`${uid}-fill-${index}`} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={`var(--color-${key})`} stopOpacity={0.85} />
               <stop offset="100%" stopColor={`var(--color-${key})`} stopOpacity={0.04} />
             </linearGradient>
@@ -61,37 +69,27 @@ export function AreaChart({ data, options }: AreaChartProps) {
           axisLine={false}
           tickMargin={8}
           width={40}
-          tickFormatter={
-            stackMode === "percent"
-              ? (value: number) =>
-                  new Intl.NumberFormat("en-US", { style: "percent" }).format(value)
-              : (value: number) => formatCompactNumber(value)
-          }
+          tickFormatter={stackMode === "percent" ? formatPercentTick : formatCompactNumber}
         />
-        <ChartTooltip
-          labelFormatter={dateAxis ? (label) => formatDateTick(String(label)) : undefined}
-          content={
-            series.length > 1 ? (
-              <ChartBreakdownTooltip
-                config={chartConfig}
-                seriesOrder={series.map((s) => s.key)}
-              />
-            ) : (
-              <ChartTooltipContent indicator="dot" />
-            )
-          }
+        <SeriesTooltip
+          config={chartConfig}
+          seriesCount={series.length}
+          style={options?.tooltipStyle}
+          dateAxis={dateAxis}
+          indicator="dot"
         />
-        <ChartLegend content={<ChartLegendContent />} />
-        {series.map(({ key }) => (
+        <ChartLegend content={<ChartLegendContent />} itemSorter={null} />
+        {series.map(({ key }, index) => (
           <Area
             key={key}
             dataKey={key}
             type="natural"
-            fill={`url(#fill-${key})`}
+            fill={`url(#${uid}-fill-${index})`}
             fillOpacity={1}
             stroke={`var(--color-${key})`}
             strokeWidth={2.5}
             stackId={stackMode !== "none" ? "stack" : undefined}
+            animationBegin={index * SERIES_STAGGER_MS}
           />
         ))}
       </RechartsAreaChart>

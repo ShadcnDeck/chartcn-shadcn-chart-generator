@@ -2,10 +2,17 @@ import { describe, expect, it } from "vitest"
 
 import {
   computeGrowth,
+  computeKpi,
+  getExportFields,
   getSeries,
   isDateAxis,
+  isSafeColor,
   resolveColor,
+  sortRowsByFirstSeries,
   toChartRows,
+  toExportRows,
+  toPropertyAccess,
+  toPropertyKey,
   toScatterGroups,
 } from "@/lib/chart-data"
 import { parseCSV } from "@/lib/csv-parser"
@@ -81,5 +88,69 @@ describe("toScatterGroups", () => {
       { key: "A", label: "A", color: "var(--chart-1)", points: [{ x: 1, y: 2 }, { x: 3, y: 4 }] },
       { key: "B", label: "B", color: "var(--chart-2)", points: [{ x: 5, y: 6 }] },
     ])
+  })
+})
+
+describe("getExportFields / toExportRows", () => {
+  it("uses the real headers, quoting nothing and renaming only path-like keys", () => {
+    const data = parseCSV("Month,Product A,v1.2\nJan,1,2")
+    const { category, series } = getExportFields(data)
+    expect(category).toMatchObject({ key: "Month", cssSafe: true })
+    expect(series.map(({ key, cssSafe }) => ({ key, cssSafe }))).toEqual([
+      { key: "Product A", cssSafe: false },
+      { key: "v1_2", cssSafe: true },
+    ])
+    expect(toExportRows(data)).toEqual([{ Month: "Jan", "Product A": 1, v1_2: 2 }])
+  })
+
+  it("de-duplicates keys that collide after renaming", () => {
+    const data = parseCSV("Month,a.b,a_b\nJan,1,2")
+    expect(getExportFields(data).series.map((s) => s.key)).toEqual(["a_b", "a_b_2"])
+  })
+})
+
+describe("toPropertyKey / toPropertyAccess", () => {
+  it("leaves identifiers bare and quotes everything else", () => {
+    expect(toPropertyKey("revenue")).toBe("revenue")
+    expect(toPropertyKey("total sales")).toBe('"total sales"')
+    expect(toPropertyAccess("row", "revenue")).toBe("row.revenue")
+    expect(toPropertyAccess("row", "total sales")).toBe('row["total sales"]')
+  })
+})
+
+describe("computeKpi", () => {
+  it("returns the latest value and change vs. the previous non-blank value", () => {
+    const data = parseCSV("Month,MRR\nJan,100\nFeb,\nMar,125")
+    expect(computeKpi(data)).toMatchObject({
+      label: "MRR",
+      latest: 125,
+      previous: 100,
+      delta: 25,
+      firstCategory: "Jan",
+      lastCategory: "Mar",
+    })
+  })
+})
+
+describe("sortRowsByFirstSeries", () => {
+  it("sorts descending and ascending without mutating the input", () => {
+    const rows = [{ v: 2 }, { v: 3 }, { v: 1 }]
+    expect(sortRowsByFirstSeries(rows, "v", "desc").map((r) => r.v)).toEqual([3, 2, 1])
+    expect(sortRowsByFirstSeries(rows, "v", "asc").map((r) => r.v)).toEqual([1, 2, 3])
+    expect(rows.map((r) => r.v)).toEqual([2, 3, 1])
+  })
+})
+
+describe("isSafeColor", () => {
+  it("accepts plain colors and palette variables", () => {
+    for (const color of ["#fff", "#2a78d6", "rgb(1, 2, 3)", "oklch(0.6 0.2 250)", "var(--chart-3)"]) {
+      expect(isSafeColor(color)).toBe(true)
+    }
+  })
+
+  it("rejects anything that could break out of CSS or an attribute", () => {
+    for (const color of ['red"/><script>', "red;}body{display:none", "url(x)", "var(--x)", 42]) {
+      expect(isSafeColor(color)).toBe(false)
+    }
   })
 })

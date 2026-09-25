@@ -5,58 +5,52 @@ import { formatCompactNumber } from "@/lib/chart-data"
 
 interface ChartBreakdownTooltipProps {
   active?: boolean
-  payload?: ReadonlyArray<Record<string, unknown>>
+  payload?: ReadonlyArray<{ dataKey?: unknown; value?: unknown }>
   label?: string | number
+  labelFormatter?: (label: unknown) => string
   config: ChartConfig
-  seriesOrder: string[]
 }
 
 /** Tooltip for multi-series bar/line/area charts: shows the row's total plus
- * a small pie breaking down each series' share of that row. */
+ * a small donut breaking down each series' share of that row.
+ *
+ * Keep in sync with BREAKDOWN_TOOLTIP in lib/code-templates.ts — the copied
+ * code embeds the same component so it matches this preview. */
 export function ChartBreakdownTooltip({
   active,
   payload,
   label,
+  labelFormatter,
   config,
-  seriesOrder,
 }: ChartBreakdownTooltipProps) {
   if (!active || !payload?.length) return null
 
-  const source = (payload[0]?.payload as Record<string, unknown> | undefined) ?? {}
-
-  const entries = seriesOrder
-    .map((key) => {
-      const raw = source[key]
-      const value = typeof raw === "number" ? raw : Number(raw)
+  const entries = payload
+    .map((item) => {
+      const key = String(item.dataKey)
+      const value = Math.abs(Number(item.value))
       return {
         key,
         label: config[key]?.label ?? key,
         color: config[key]?.color ?? "var(--chart-1)",
-        value: Number.isFinite(value) ? Math.abs(value) : 0,
+        value: Number.isFinite(value) ? value : 0,
       }
     })
     .filter((entry) => entry.value > 0)
-
-  const total = entries.reduce((sum, entry) => sum + entry.value, 0)
-
   if (entries.length === 0) return null
 
-  const cumulativeTotals = entries.reduce<number[]>((acc, entry) => {
-    const previous = acc.length > 0 ? acc[acc.length - 1] : 0
-    return [...acc, previous + entry.value]
-  }, [])
+  const total = entries.reduce((sum, entry) => sum + entry.value, 0)
   const stops = entries.map((entry, index) => {
-    const previous = index > 0 ? cumulativeTotals[index - 1] : 0
-    const start = (previous / total) * 100
-    const end = (cumulativeTotals[index] / total) * 100
-    return `${entry.color} ${start}% ${end}%`
+    const before = entries.slice(0, index).reduce((sum, e) => sum + e.value, 0)
+    return `${entry.color} ${(before / total) * 100}% ${((before + entry.value) / total) * 100}%`
   })
-  const donutBackground = `conic-gradient(${stops.join(", ")})`
 
   return (
-    <div className="min-w-[13rem] rounded-xl border border-border bg-card p-3 text-xs shadow-lg">
+    <div className="min-w-52 rounded-xl border border-border bg-card p-3 text-xs shadow-lg animate-in fade-in-0 zoom-in-95 duration-150">
       <div className="mb-2 flex items-center justify-between gap-3">
-        <span className="font-medium text-foreground">{label}</span>
+        <span className="font-medium text-foreground">
+          {label !== undefined && labelFormatter ? labelFormatter(label) : label}
+        </span>
         <span className="font-mono font-semibold text-foreground">
           {formatCompactNumber(total)}
         </span>
@@ -64,9 +58,9 @@ export function ChartBreakdownTooltip({
       <div className="flex items-center gap-3">
         <div
           className="relative size-14 shrink-0 rounded-full"
-          style={{ background: donutBackground }}
+          style={{ background: `conic-gradient(${stops.join(", ")})` }}
         >
-          <div className="absolute inset-[6px] rounded-full bg-card" />
+          <div className="absolute inset-1.5 rounded-full bg-card" />
         </div>
         <div className="flex flex-1 flex-col gap-1">
           {entries.map((entry) => (
@@ -79,7 +73,7 @@ export function ChartBreakdownTooltip({
                 <span className="truncate">{entry.label}</span>
               </span>
               <span className="shrink-0 font-medium text-foreground">
-                {total > 0 ? Math.round((entry.value / total) * 100) : 0}%
+                {Math.round((entry.value / total) * 100)}%
               </span>
             </div>
           ))}

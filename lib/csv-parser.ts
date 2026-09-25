@@ -1,8 +1,8 @@
 import Papa from "papaparse"
 import type { ChartDataRow, ChartType, ParsedChartData } from "@/types/chart"
 
-const MAX_ROWS = 500
-const MAX_SERIES = 10
+export const MAX_ROWS = 500
+export const MAX_SERIES = 10
 
 const THOUSANDS_COMMA_RE = /^-?\d{1,3}(,\d{3})+$/
 // Indian numbering (lakh/crore): groups of 2 digits after the first group,
@@ -53,7 +53,10 @@ export function parseNumericCell(raw: string): number | null {
   return Number.isFinite(parsed) ? parsed : null
 }
 
-export function parseCSV(csv: string): ParsedChartData {
+/** Parses delimited text. `delimiter` defaults to Papa Parse's auto-detection
+ * (comma, tab, pipe, semicolon, ...); pass "\t" for known TSV so a value like
+ * "1,234" can't sway the guess. */
+export function parseCSV(csv: string, delimiter?: string): ParsedChartData {
   const trimmed = csv.trim()
 
   if (!trimmed) {
@@ -62,6 +65,7 @@ export function parseCSV(csv: string): ParsedChartData {
 
   const result = Papa.parse<string[]>(trimmed, {
     skipEmptyLines: true,
+    delimiter,
   })
 
   if (result.errors.length > 0) {
@@ -72,13 +76,19 @@ export function parseCSV(csv: string): ParsedChartData {
     }
   }
 
-  const records = result.data.map((row) => row.map((cell) => cell.trim()))
+  return recordsToChartData(result.data)
+}
+
+/** Header row + data rows of raw cell strings (from CSV, TSV, or a markdown
+ * table) into chart data: column 1 is the category, the rest are numeric. */
+export function recordsToChartData(rawRecords: string[][]): ParsedChartData {
+  const records = rawRecords.map((row) => row.map((cell) => cell.trim()))
 
   if (records.length < 2) {
     return {
       headers: [],
       rows: [],
-      error: "CSV needs a header row and at least one data row.",
+      error: "Data needs a header row and at least one data row.",
     }
   }
 
@@ -149,10 +159,13 @@ export function toCSV(data: ParsedChartData): string {
   return Papa.unparse([data.headers, ...rows])
 }
 
-const COLUMN_REQUIREMENTS: Partial<Record<ChartType, { count: number; hint: string }>> = {
-  pie: { count: 2, hint: "Category,Value" },
-  radial: { count: 2, hint: "Category,Value" },
-  scatter: { count: 3, hint: "Category,X,Y" },
+const COLUMN_REQUIREMENTS: Partial<
+  Record<ChartType, { count: number; hint: string; name: string }>
+> = {
+  pie: { count: 2, hint: "Category,Value", name: "Pie" },
+  radial: { count: 2, hint: "Category,Value", name: "Radial" },
+  scatter: { count: 3, hint: "Category,X,Y", name: "Scatter" },
+  kpi: { count: 2, hint: "Period,Value", name: "KPI" },
 }
 
 /** Warns when a chart type's fixed CSV shape (e.g. pie/radial's Category,Value or
@@ -162,5 +175,5 @@ export function validateColumnsForType(type: ChartType, data: ParsedChartData): 
   if (!requirement || data.headers.length === 0) return undefined
   if (data.headers.length === requirement.count) return undefined
 
-  return `${type[0].toUpperCase()}${type.slice(1)} charts expect exactly ${requirement.count} columns (${requirement.hint}).`
+  return `${requirement.name} charts expect exactly ${requirement.count} columns (${requirement.hint}).`
 }

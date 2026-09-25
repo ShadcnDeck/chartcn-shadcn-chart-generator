@@ -1,3 +1,4 @@
+import { isSafeColor } from "@/lib/chart-data"
 import type { ChartOptions, ChartType } from "@/types/chart"
 
 export interface ShareConfig {
@@ -49,6 +50,18 @@ export async function encodeShareConfig(config: ShareConfig): Promise<string> {
   return `${RAW_FLAG}.${bytesToBase64Url(new TextEncoder().encode(json))}`
 }
 
+/** Drops custom colors that aren't plain color values. They're injected into
+ * a <style> tag and SVG attributes, and a share link can contain anything. */
+function sanitizeOptions(options: unknown): ChartOptions {
+  if (typeof options !== "object" || options === null) return {}
+  const { customColors, ...rest } = options as ChartOptions
+  if (!customColors || typeof customColors !== "object") return rest
+  const safe = Object.fromEntries(
+    Object.entries(customColors).filter(([, color]) => isSafeColor(color))
+  )
+  return Object.keys(safe).length > 0 ? { ...rest, customColors: safe } : rest
+}
+
 /** Inverse of encodeShareConfig. Returns null on any malformed or
  * unparseable input rather than throwing, so a bad link just falls back to
  * the default sample chart. */
@@ -72,7 +85,8 @@ export async function decodeShareConfig(value: string): Promise<ShareConfig | nu
     ) {
       return null
     }
-    return parsed as ShareConfig
+    const config = parsed as ShareConfig
+    return { ...config, options: sanitizeOptions(config.options) }
   } catch {
     return null
   }

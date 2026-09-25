@@ -19,7 +19,7 @@ describe("parseCSV", () => {
 
   it("errors when there's no data row", () => {
     expect(parseCSV("Month,Revenue").error).toBe(
-      "CSV needs a header row and at least one data row."
+      "Data needs a header row and at least one data row."
     )
   })
 

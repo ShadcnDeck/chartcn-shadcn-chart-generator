@@ -1,3 +1,4 @@
+import { parseCSV } from "@/lib/csv-parser"
 import type { ChartType } from "@/types/chart"
 
 export const sampleCSV: Record<ChartType, string> = {
@@ -48,6 +49,20 @@ Affiliate,1200,95`,
 Signups,72
 Activation,54
 Retention,38`,
+  "horizontal-bar": `Framework,Stars
+React,232000
+Vue,208000
+Angular,96000
+Svelte,80000
+Solid,33000
+Qwik,21000`,
+  kpi: `Month,Revenue
+Jan,42000
+Feb,45800
+Mar,44100
+Apr,51200
+May,56900
+Jun,61400`,
 }
 
 export const chartTypeLabels: Record<ChartType, string> = {
@@ -59,6 +74,8 @@ export const chartTypeLabels: Record<ChartType, string> = {
   radar: "Radar Chart",
   scatter: "Scatter Chart",
   radial: "Radial / Gauge Chart",
+  "horizontal-bar": "Horizontal Bar Chart",
+  kpi: "KPI Sparkline Card",
 }
 
 export const chartTypeDescriptions: Record<ChartType, string> = {
@@ -70,10 +87,13 @@ export const chartTypeDescriptions: Record<ChartType, string> = {
   radar: "Compare multiple metrics across series on a spider chart.",
   scatter: "Plot two numeric dimensions against each other, grouped by category.",
   radial: "Show progress toward a goal per category as concentric rings.",
+  "horizontal-bar": "Rank categories with long labels, sorted and labeled at the bar end.",
+  kpi: "A headline metric with its change vs. the previous period and a trend sparkline.",
 }
 
 export const chartTypes: ChartType[] = [
   "bar",
+  "horizontal-bar",
   "line",
   "area",
   "combo",
@@ -81,4 +101,25 @@ export const chartTypes: ChartType[] = [
   "radar",
   "scatter",
   "radial",
+  "kpi",
 ]
+
+function toCamelCase(value: string): string {
+  return value
+    .trim()
+    .replace(/[^a-zA-Z0-9]+(.)?/g, (_, next: string | undefined) => (next ? next.toUpperCase() : ""))
+    .replace(/^[A-Z]/, (first) => first.toLowerCase())
+}
+
+/** The sample as an API-style JSON array with camelCase keys, one record per
+ * line, e.g. `{ "month": "Jan", "revenue": 42000 }`. */
+export function sampleJSON(type: ChartType): string {
+  const { headers, rows } = parseCSV(sampleCSV[type])
+  const keys = headers.map(toCamelCase)
+  const records = rows.map((row) =>
+    JSON.stringify(Object.fromEntries(headers.map((header, i) => [keys[i], row[header]])))
+      .replace(/":/g, '": ')
+      .replace(/,"/g, ', "')
+  )
+  return `[\n  ${records.join(",\n  ")}\n]`
+}

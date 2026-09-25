@@ -50,3 +50,19 @@ describe("encodeShareConfig / decodeShareConfig", () => {
     await expect(decodeShareConfig(`0.${base64Url}`)).resolves.toBeNull()
   })
 })
+
+describe("decodeShareConfig: untrusted options", () => {
+  it("drops custom colors that aren't plain color values", async () => {
+    const encoded = await encodeShareConfig({
+      ...config,
+      options: {
+        customColors: {
+          series_Revenue: "#00ff00",
+          series_Evil: "red;}</style><img src=x onerror=alert(1)>",
+        },
+      },
+    })
+    const decoded = await decodeShareConfig(encoded)
+    expect(decoded?.options.customColors).toEqual({ series_Revenue: "#00ff00" })
+  })
+})

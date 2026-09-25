@@ -1,3 +1,5 @@
+import { cn } from "@/lib/utils"
+
 const TICK_COUNT = 44
 const SIZE = 128
 const CENTER = SIZE / 2
@@ -18,9 +20,12 @@ function round(value: number): number {
 }
 
 export function GrowthGauge({ value, label = "Growth" }: GrowthGaugeProps) {
-  const ratio = Math.min(1, Math.max(0, value / 100))
+  // Fill by magnitude so a decline is visible too (in the destructive color),
+  // capped at a full ring for changes beyond ±100%.
+  const ratio = Math.min(1, Math.abs(value) / 100)
   const filledTicks = Math.round(ratio * TICK_COUNT)
   const rounded = Math.round(value)
+  const filledClass = value < 0 ? "stroke-destructive" : "stroke-primary"
 
   return (
     <div className="relative flex shrink-0 items-center justify-center" style={{ width: SIZE, height: SIZE }}>
@@ -40,13 +45,22 @@ export function GrowthGauge({ value, label = "Growth" }: GrowthGaugeProps) {
               y2={y2}
               strokeWidth={2.5}
               strokeLinecap="round"
-              className={i < filledTicks ? "stroke-primary" : "stroke-border"}
+              className={cn(
+                "transition-colors duration-300 motion-reduce:transition-none",
+                i < filledTicks ? filledClass : "stroke-border"
+              )}
+              style={{ transitionDelay: `${i * 8}ms` }}
             />
           )
         })}
       </svg>
       <div className="absolute flex flex-col items-center">
-        <span className="text-xl font-semibold tracking-tight">
+        <span
+          className={cn(
+            "text-xl font-semibold tracking-tight tabular-nums",
+            value < 0 && "text-destructive"
+          )}
+        >
           {rounded >= 0 ? "+" : ""}
           {rounded}%
         </span>

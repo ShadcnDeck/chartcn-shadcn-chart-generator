@@ -1,14 +1,18 @@
 "use client"
 
-import { CartesianGrid, Line, LineChart as RechartsLineChart, XAxis, YAxis } from "recharts"
+import {
+  CartesianGrid,
+  Line,
+  LineChart as RechartsLineChart,
+  XAxis,
+  YAxis,
+} from "recharts"
 
-import { ChartBreakdownTooltip } from "@/components/charts/chart-breakdown-tooltip"
+import { SeriesTooltip } from "@/components/charts/series-tooltip"
 import {
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
 } from "@/components/ui/chart"
 import {
   CATEGORY_KEY,
@@ -48,22 +52,15 @@ export function LineChart({ data, options }: LineChartProps) {
           axisLine={false}
           tickMargin={8}
           width={40}
-          tickFormatter={(value: number) => formatCompactNumber(value)}
+          tickFormatter={formatCompactNumber}
         />
-        <ChartTooltip
-          labelFormatter={dateAxis ? (label) => formatDateTick(String(label)) : undefined}
-          content={
-            series.length > 1 ? (
-              <ChartBreakdownTooltip
-                config={chartConfig}
-                seriesOrder={series.map((s) => s.key)}
-              />
-            ) : (
-              <ChartTooltipContent />
-            )
-          }
+        <SeriesTooltip
+          config={chartConfig}
+          seriesCount={series.length}
+          style={options?.tooltipStyle}
+          dateAxis={dateAxis}
         />
-        <ChartLegend content={<ChartLegendContent />} />
+        <ChartLegend content={<ChartLegendContent />} itemSorter={null} />
         {series.map(({ key }) => (
           <Line
             key={key}
@@ -71,7 +68,7 @@ export function LineChart({ data, options }: LineChartProps) {
             type={options?.smooth ? "monotone" : "linear"}
             stroke={`var(--color-${key})`}
             strokeWidth={2.5}
-            dot={options?.showDots ?? true}
+            dot={options?.showDots ?? true ? { r: 3, fill: "var(--card)", strokeWidth: 2 } : false}
             activeDot={{ r: 5, strokeWidth: 2, stroke: "var(--card)" }}
           />
         ))}
