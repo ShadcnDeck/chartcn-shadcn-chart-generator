@@ -68,44 +68,6 @@ export async function generateMetadata({
   }
 }
 
-/** `text` with its `accent` substring set in the italic accent serif, the
- * same treatment as the gallery and home page headings. */
-function Accented({ text, accent }: { text: string; accent: string }) {
-  const index = text.indexOf(accent)
-  if (index === -1) return text
-  return (
-    <>
-      {text.slice(0, index)}
-      <span className="font-serif text-4xl font-normal italic text-primary sm:text-5xl">
-        {accent}
-      </span>
-      {text.slice(index + accent.length)}
-    </>
-  )
-}
-
-function Step({ n, children }: { n: number; children: React.ReactNode }) {
-  return (
-    <li className="flex gap-3">
-      <span
-        aria-hidden
-        className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary"
-      >
-        {n}
-      </span>
-      <div className="flex min-w-0 flex-1 flex-col gap-2 pt-0.5">{children}</div>
-    </li>
-  )
-}
-
-function InlineCode({ children }: { children: React.ReactNode }) {
-  return (
-    <code className="rounded bg-primary/10 px-1 py-0.5 font-mono text-xs break-all text-primary">
-      {children}
-    </code>
-  )
-}
-
 const PREVIEW_ROWS = 6
 
 /** The sample CSV, trimmed for display (the interactive sample has 90 rows). */
@@ -149,9 +111,7 @@ export default async function ChartDetailPage({ params }: ChartDetailPageProps) 
             { label },
           ]}
         />
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-          <Accented text={seo.h1} accent={seo.h1Accent} />
-        </h1>
+        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{seo.h1}</h1>
         <p className="max-w-2xl text-muted-foreground">{seo.intro}</p>
       </div>
 
@@ -180,7 +140,7 @@ export default async function ChartDetailPage({ params }: ChartDetailPageProps) 
             <h2 id="data-format" className="text-xl font-semibold tracking-tight">
               Data format
             </h2>
-            <ul className="flex list-disc flex-col gap-1.5 pl-5 text-muted-foreground marker:text-primary">
+            <ul className="flex list-disc flex-col gap-1.5 pl-5 text-muted-foreground">
               {seo.dataNotes.map((note) => (
                 <li key={note}>{note}</li>
               ))}
@@ -225,46 +185,41 @@ export default async function ChartDetailPage({ params }: ChartDetailPageProps) 
               How to add it to your project
             </h2>
             <ol className="flex flex-col gap-4">
-              <Step n={1}>
-                {noChartDependency ? (
-                  <span>This component is plain React and Tailwind: no chart library to install.</span>
-                ) : (
-                  <>
-                    <span>Add the shadcn/ui chart component (it installs Recharts):</span>
-                    <div className="flex min-w-0 items-center justify-between gap-2 rounded-lg border border-primary/20 bg-primary/5 py-1.5 pr-1.5 pl-3">
-                      <code className="font-mono text-xs break-all text-primary">
-                        npx shadcn@latest add chart
-                      </code>
-                      <CopyButton
-                        text="npx shadcn@latest add chart"
-                        label="Copy"
-                        variant="ghost"
-                        size="sm"
-                      />
-                    </div>
-                  </>
-                )}
-              </Step>
-              <Step n={2}>
-                <span>
-                  Paste your data above, pick the options, and copy the generated{" "}
-                  <InlineCode>chart.tsx</InlineCode>.
-                </span>
-              </Step>
-              <Step n={3}>
-                <span>
-                  Save it in your project (e.g. <InlineCode>components/{type}-chart.tsx</InlineCode>)
-                  and render <InlineCode>{"<Chart />"}</InlineCode>, or{" "}
-                  <InlineCode>{"<Chart data={rows} />"}</InlineCode> in Data as prop mode.
-                </span>
-              </Step>
+              {noChartDependency ? (
+                <li className="text-muted-foreground">
+                  1. This component is plain React and Tailwind: no chart library to install.
+                </li>
+              ) : (
+                <li className="flex flex-col gap-2">
+                  <span>1. Add the shadcn/ui chart component (it installs Recharts):</span>
+                  <div className="flex min-w-0 items-center justify-between gap-2 rounded-lg border border-border bg-muted/40 py-1.5 pr-1.5 pl-3">
+                    <code className="font-mono text-xs break-all">npx shadcn@latest add chart</code>
+                    <CopyButton
+                      text="npx shadcn@latest add chart"
+                      label="Copy"
+                      variant="ghost"
+                      size="sm"
+                    />
+                  </div>
+                </li>
+              )}
+              <li>
+                2. Paste your data above, pick the options, and copy the generated{" "}
+                <code className="font-mono text-xs break-all">chart.tsx</code>.
+              </li>
+              <li>
+                3. Save it in your project (e.g.{" "}
+                <code className="font-mono text-xs break-all">components/{type}-chart.tsx</code>) and
+                render <code className="font-mono text-xs break-all">{"<Chart />"}</code>, or{" "}
+                <code className="font-mono text-xs break-all">{"<Chart data={rows} />"}</code> in Data
+                as prop mode.
+              </li>
             </ol>
           </section>
 
           <section aria-labelledby="faq" className="flex flex-col gap-4">
             <h2 id="faq" className="text-xl font-semibold tracking-tight">
-              {label}{" "}
-              <span className="font-serif text-[1.7rem] leading-none font-normal italic text-primary">FAQ</span>
+              {label} FAQ
             </h2>
             <FaqList faqs={seo.faqs} />
           </section>
