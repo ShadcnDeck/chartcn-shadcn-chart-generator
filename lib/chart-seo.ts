@@ -14,6 +14,8 @@ export interface ChartSeo {
   /** Meta description, ≤ 155 characters. */
   description: string
   h1: string
+  /** Word(s) of the H1 set in the accent serif; must appear in `h1`. */
+  h1Accent: string
   intro: string
   whenToUse: { lead: string; cases: string[] }
   /** Chart-specific data format rules, shown under the sample data. */
@@ -35,6 +37,7 @@ export const chartSeo: Record<ChartType, ChartSeo> = {
     description:
       "Generate a shadcn/ui bar chart from your CSV or JSON. Grouped, stacked, or 100% stacked bars built on Recharts. Preview live and copy the TSX.",
     h1: "Shadcn Bar Chart Generator",
+    h1Accent: "Bar",
     intro:
       "Turn a CSV or JSON array into a shadcn/ui bar chart with rounded gradient bars, a breakdown tooltip, and grouped or stacked layouts, then copy one self-contained React component.",
     whenToUse: {
@@ -89,6 +92,7 @@ export const chartSeo: Record<ChartType, ChartSeo> = {
     description:
       "Build a sorted horizontal bar chart for shadcn/ui and React. Great for rankings and long labels, with value labels. Paste data, copy the TSX.",
     h1: "Shadcn Horizontal Bar Chart",
+    h1Accent: "Horizontal",
     intro:
       "Rank categories with a horizontal bar chart: long labels stay readable, bars can be sorted high to low, and each bar carries its value at the end.",
     whenToUse: {
@@ -137,6 +141,7 @@ export const chartSeo: Record<ChartType, ChartSeo> = {
     description:
       "Create a shadcn/ui line chart from CSV or JSON: multi-series lines, smooth curves, dots, and date axes. Preview it live and copy the React code.",
     h1: "Shadcn Line Chart Generator",
+    h1Accent: "Line",
     intro:
       "Plot trends over time with a shadcn/ui line chart: one line per series, optional smoothing and dots, and automatic date formatting on the axis.",
     whenToUse: {
@@ -184,6 +189,7 @@ export const chartSeo: Record<ChartType, ChartSeo> = {
     description:
       "Generate a shadcn/ui area chart with gradient fills, stacked or 100% modes, and date axes. Paste CSV or JSON and copy a ready React component.",
     h1: "Shadcn Area Chart Generator",
+    h1Accent: "Area",
     intro:
       "Show volume over time with a shadcn/ui area chart: soft gradient fills, overlapping or stacked series, and a 100% mode for shares.",
     whenToUse: {
@@ -228,6 +234,7 @@ export const chartSeo: Record<ChartType, ChartSeo> = {
     description:
       "Combine bars and lines in one shadcn/ui chart, e.g. actuals vs. target. Choose bar or line per series, then copy the Recharts ComposedChart code.",
     h1: "Shadcn Combo Chart (Bar + Line)",
+    h1Accent: "Combo",
     intro:
       "Mix bars and lines in a single shadcn/ui chart. Pick per series whether it renders as a bar or a line, which suits actuals-vs-target and volume-vs-rate views.",
     whenToUse: {
@@ -270,6 +277,7 @@ export const chartSeo: Record<ChartType, ChartSeo> = {
     description:
       "Make a shadcn/ui pie or donut chart from two columns of data. Value, percent, or name labels and a donut total. Copy the React + Recharts code.",
     h1: "Shadcn Pie & Donut Chart",
+    h1Accent: "Pie & Donut",
     intro:
       "Show part-to-whole breakdowns with a shadcn/ui pie chart, or switch to a donut with the total in the center.",
     whenToUse: {
@@ -317,6 +325,7 @@ export const chartSeo: Record<ChartType, ChartSeo> = {
     description:
       "Compare several metrics across series with a shadcn/ui radar chart. Paste your CSV or JSON, preview the spider chart, and copy the React component.",
     h1: "Shadcn Radar Chart Generator",
+    h1Accent: "Radar",
     intro:
       "Compare profiles across several dimensions with a radar (spider) chart, one translucent polygon per series.",
     whenToUse: {
@@ -358,6 +367,7 @@ export const chartSeo: Record<ChartType, ChartSeo> = {
     description:
       "Plot two numeric variables against each other with a shadcn/ui scatter chart, colored by category. Paste CSV or JSON, then copy the component.",
     h1: "Shadcn Scatter Chart Generator",
+    h1Accent: "Scatter",
     intro:
       "Plot the relationship between two numbers with a scatter chart, with points grouped and colored by a category.",
     whenToUse: {
@@ -398,6 +408,7 @@ export const chartSeo: Record<ChartType, ChartSeo> = {
     description:
       "Show progress toward goals with a shadcn/ui radial bar chart or half gauge, with the headline value in the center. Paste data and copy the code.",
     h1: "Shadcn Radial Chart & Gauge",
+    h1Accent: "Radial",
     intro:
       "Show progress toward a goal as concentric rings or a half gauge, with the headline metric in the center.",
     whenToUse: {
@@ -443,6 +454,7 @@ export const chartSeo: Record<ChartType, ChartSeo> = {
     description:
       "Generate a shadcn/ui KPI stat card: headline value, change vs. the previous period, and an area, line, or bar sparkline. Paste data, copy TSX.",
     h1: "Shadcn KPI Card with Sparkline",
+    h1Accent: "KPI Card",
     intro:
       "A dashboard stat card: the latest value, its change vs. the previous period as a colored badge, and a small sparkline of the trend.",
     whenToUse: {
@@ -489,6 +501,7 @@ export const chartSeo: Record<ChartType, ChartSeo> = {
     description:
       "An interactive shadcn/ui area chart with 7, 30, and 90-day range buttons and a drag-to-zoom brush. Paste daily data and copy the React code.",
     h1: "Shadcn Interactive Area Chart",
+    h1Accent: "Interactive",
     intro:
       "A stacked daily chart with range buttons (7 / 30 / 90 days / All) and a drag-to-zoom brush, the classic analytics dashboard view.",
     whenToUse: {
@@ -536,6 +549,7 @@ export const chartSeo: Record<ChartType, ChartSeo> = {
     description:
       "Build a waterfall chart in React with shadcn/ui and Recharts: a starting total, increases, decreases, and a final total. Paste data, copy TSX.",
     h1: "Shadcn Waterfall Chart",
+    h1Accent: "Waterfall",
     intro:
       "Walk a starting value through its increases and decreases to a final total, with floating bars colored by direction.",
     whenToUse: {
@@ -584,6 +598,7 @@ export const chartSeo: Record<ChartType, ChartSeo> = {
     description:
       "Build a React heatmap for shadcn/ui: cohort retention, activity by day and hour, any value grid. No chart library needed. Paste data, copy TSX.",
     h1: "Shadcn Heatmap Generator",
+    h1Accent: "Heatmap",
     intro:
       "Shade a grid of values by intensity, which suits cohort retention tables and activity-by-hour grids. It's built from Tailwind and CSS, with no chart library.",
     whenToUse: {

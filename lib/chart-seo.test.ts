@@ -73,3 +73,9 @@ describe("structured data", () => {
     )
   })
 })
+
+describe("chartSeo accents", () => {
+  it.each(chartTypes)("%s H1 accent is part of its H1", (type) => {
+    expect(chartSeo[type].h1).toContain(chartSeo[type].h1Accent)
+  })
+})
