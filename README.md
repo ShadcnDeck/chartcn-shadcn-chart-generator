@@ -69,8 +69,8 @@ If you're not a developer: a "chart component" is a small piece of code that dra
 Clone the repo and run it locally:
 
 ```bash
-git clone https://github.com/ShadcnDeck/chartcn.git
-cd chartcn
+git clone https://github.com/ShadcnDeck/chartcn-shadcn-chart-generator.git
+cd chartcn-shadcn-chart-generator
 npm install
 npm run dev
 ```

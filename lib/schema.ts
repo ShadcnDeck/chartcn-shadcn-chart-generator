@@ -7,7 +7,7 @@
 import { chartSeo } from "@/lib/chart-seo"
 import type { Faq } from "@/lib/faq"
 import { chartTypeDescriptions, chartTypeLabels, chartTypes } from "@/lib/sample-data"
-import { GITHUB_URL, ORGANIZATION_URL, SITE_NAME, SITE_URL } from "@/lib/seo"
+import { GITHUB_ORG_URL, GITHUB_URL, ORGANIZATION_URL, SITE_NAME, SITE_URL } from "@/lib/seo"
 import type { ChartType } from "@/types/chart"
 
 const ORG_ID = `${ORGANIZATION_URL}/#organization`
@@ -20,7 +20,7 @@ const organization = {
   name: "ShadcnDeck",
   url: ORGANIZATION_URL,
   logo: `${SITE_URL}/icon.svg`,
-  sameAs: [GITHUB_URL.replace(/\/chartcn$/, "")],
+  sameAs: [GITHUB_ORG_URL],
 }
 
 const website = {
