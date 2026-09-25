@@ -5,9 +5,9 @@ import { ChartCard } from "@/components/chart-card"
 import { chartTypes } from "@/lib/sample-data"
 
 export const metadata: Metadata = {
-  title: "Chart Gallery: 8 Shadcn UI Chart Types",
+  title: "Chart Gallery: 10 Shadcn UI Chart Types",
   description:
-    "Browse all 8 shadcn/ui chart types: bar, line, area, combo, pie, radar, scatter, and radial. Preview live sample data, then paste your own CSV to generate the component.",
+    "Browse all 10 shadcn/ui chart types: bar, horizontal bar, line, area, combo, pie, radar, scatter, radial, and KPI sparkline. Preview live sample data, then paste your own CSV or JSON to generate the component.",
   alternates: {
     canonical: "/charts",
   },
@@ -23,7 +23,7 @@ export default function ChartsGallery() {
         </h1>
         <p className="max-w-lg text-muted-foreground">
           Every chart below is powered by live sample data. Pick one to paste
-          your own CSV, upload a file, or edit the table.
+          your own CSV or JSON, upload a file, or edit the table.
         </p>
       </div>
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">

@@ -27,7 +27,7 @@ const spaceGrotesk = Space_Grotesk({
 
 const title = "ChartCN: Free Open Source Shadcn UI Chart Generator";
 const description =
-  "ChartCN is a free, open source CSV to chart generator for shadcn/ui and React. Paste your CSV, preview 8 chart types built on Recharts, then copy the code. No install, no account.";
+  "ChartCN is a free, open source CSV to chart generator for shadcn/ui and React. Paste your CSV, preview 10 chart types built on Recharts, then copy the code. No install, no account.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
