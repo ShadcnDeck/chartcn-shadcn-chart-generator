@@ -3,7 +3,7 @@ import Link from "next/link"
 
 import { ShadcnDeckLogo } from "@/components/shadcndeck-logo"
 
-const SHADCNDECK_URL = "https://shadcndeck.com"
+const SHADCNDECK_URL = "https://www.shadcndeck.com"
 const SUPPORT_EMAIL = "support@shadcndeck.com"
 
 const footerColumns: {

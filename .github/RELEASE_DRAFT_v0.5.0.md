@@ -11,4 +11,4 @@ Waterfall, Heatmap, Interactive Area, Horizontal Bar and KPI Sparkline bring Cha
 - **Improved:** Per-chart SEO pages with Open Graph images
 - **Fixed:** Horizontal scroll on phones
 
-[Full changelog](https://shadcndeck.com/chartcn/changelog) · [Compare v0.4.0...v0.5.0](https://github.com/ShadcnDeck/chartcn-shadcn-chart-generator/compare/v0.4.0...v0.5.0)
+[Full changelog](https://www.shadcndeck.com/chartcn/changelog) · [Compare v0.4.0...v0.5.0](https://github.com/ShadcnDeck/chartcn-shadcn-chart-generator/compare/v0.4.0...v0.5.0)

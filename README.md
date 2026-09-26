@@ -5,7 +5,7 @@
 
 **ChartCN** is a free, open source data-to-chart generator for [shadcn/ui](https://ui.shadcn.com) and React. Paste a CSV or a JSON API response, preview 13 chart types built on [Recharts](https://recharts.org), then copy a self-contained TSX component into your project. No install, no account, no new npm dependency beyond shadcn/ui and Recharts.
 
-🔗 **Live app:** [shadcndeck.com/chartcn](https://shadcndeck.com/chartcn)
+🔗 **Live app:** [www.shadcndeck.com/chartcn](https://www.shadcndeck.com/chartcn)
 
 ---
 
@@ -134,7 +134,7 @@ Either way, the generated code keys data by **your own column names**. Paste `[{
 Below the preview:
 
 - **PNG / SVG** — download exactly what the preview shows (PNG at 2x).
-- **Image URL** — a URL like `https://shadcndeck.com/chartcn/api/chart?c=...` that renders the chart as an SVG. The whole chart is encoded in the URL, so nothing is stored and the image never changes.
+- **Image URL** — a URL like `https://www.shadcndeck.com/chartcn/api/chart?c=...` that renders the chart as an SVG. The whole chart is encoded in the URL, so nothing is stored and the image never changes.
 - **README snippet** — a `<picture>` element that shows a light or dark chart to match the reader's GitHub theme.
 
 `/api/chart` query params: `c` (required, the share payload), `theme=light|dark`, `w` / `h` (size in px, 240–2000), `title`, and `bg=transparent`. The server-side renderer is dependency-free and draws the same chart types and styling; it isn't pixel-identical to the live Recharts preview, but the downloads are.
@@ -182,4 +182,4 @@ MIT — see [LICENSE](./LICENSE).
 
 ---
 
-Built by [ShadcnDeck](https://shadcndeck.com) — clean shadcn templates, built to ship.
+Built by [ShadcnDeck](https://www.shadcndeck.com) — clean shadcn templates, built to ship.

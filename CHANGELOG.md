@@ -3,7 +3,7 @@
 Chartcn components are copied into your project, so they never update on their own.
 Check the **Upgrading** notes before re-copying a component.
 
-[Website changelog](https://shadcndeck.com/chartcn/changelog) · [GitHub releases](https://github.com/ShadcnDeck/chartcn-shadcn-chart-generator/releases)
+[Website changelog](https://www.shadcndeck.com/chartcn/changelog) · [GitHub releases](https://github.com/ShadcnDeck/chartcn-shadcn-chart-generator/releases)
 
 | Version | Date | Release |
 | :-- | :-- | :-- |
