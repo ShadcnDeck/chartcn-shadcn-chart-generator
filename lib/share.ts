@@ -76,20 +76,25 @@ export async function decodeShareConfig(value: string): Promise<ShareConfig | nu
         ? await gzipDecode(bytes)
         : new TextDecoder().decode(bytes)
 
-    const parsed: unknown = JSON.parse(json)
-    if (
-      typeof parsed !== "object" ||
-      parsed === null ||
-      typeof (parsed as ShareConfig).type !== "string" ||
-      typeof (parsed as ShareConfig).csv !== "string"
-    ) {
-      return null
-    }
-    const config = parsed as ShareConfig
-    return { ...config, options: sanitizeOptions(config.options) }
+    return parseShareConfig(JSON.parse(json))
   } catch {
     return null
   }
+}
+
+/** Validates an already-parsed config from an untrusted source (a share link
+ * or a registry upload). Returns null unless it has a string type and csv. */
+export function parseShareConfig(parsed: unknown): ShareConfig | null {
+  if (
+    typeof parsed !== "object" ||
+    parsed === null ||
+    typeof (parsed as ShareConfig).type !== "string" ||
+    typeof (parsed as ShareConfig).csv !== "string"
+  ) {
+    return null
+  }
+  const config = parsed as ShareConfig
+  return { type: config.type, csv: config.csv, options: sanitizeOptions(config.options) }
 }
 
 export function buildShareURL(encoded: string): string {

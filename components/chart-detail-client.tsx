@@ -14,6 +14,7 @@ import { EditableTable } from "@/components/data-input/editable-table"
 import { FileUpload } from "@/components/data-input/file-upload"
 import { useDataSource } from "@/components/data-input/use-data-source"
 import { ImageExport } from "@/components/image-export"
+import { InstallCommand } from "@/components/install-command"
 import { ShareControls } from "@/components/share-controls"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -200,6 +201,7 @@ export function ChartDetail({ type, shareParam }: { type: ChartType; shareParam:
           <p className="text-sm text-amber-600 dark:text-amber-500">{columnWarning}</p>
         )}
         <ShareControls type={type} csv={csvText} options={options} />
+        <InstallCommand type={type} csv={csvText} options={options} />
       </div>
 
       <div className="flex min-w-0 flex-col gap-4">

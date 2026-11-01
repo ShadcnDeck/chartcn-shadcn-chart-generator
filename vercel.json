@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    {
+      "path": "/chartcn/api/cron/purge-registry",
+      "schedule": "30 18 * * *"
+    }
+  ]
+}
