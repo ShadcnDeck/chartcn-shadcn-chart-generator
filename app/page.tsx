@@ -2,10 +2,9 @@ import Link from "next/link";
 import {
   AreaChart,
   BarChart3,
-  BookmarkCheck,
   CalendarClock,
-  Copy,
   FileCode2,
+  ImageDown,
   LayoutGrid,
   LineChart,
   Palette,
@@ -14,6 +13,7 @@ import {
   Share2,
   SlidersHorizontal,
   Table2,
+  Terminal,
 } from "lucide-react";
 
 import { ChartPreview } from "@/components/chart-preview";
@@ -38,6 +38,12 @@ const features = [
     title: "13 chart types built in",
     description:
       "Bar, Horizontal Bar, Line, Area, Combo, Pie/Donut, Radar, Scatter, Radial/Gauge, KPI Sparkline cards, Interactive Area, Waterfall, and Heatmap.",
+  },
+  {
+    icon: Terminal,
+    title: "Install with the shadcn CLI",
+    description:
+      "Get one shadcn add command for your chart, or copy a self-contained TSX file. No new dependency beyond shadcn/ui and Recharts.",
   },
   {
     icon: Table2,
@@ -71,21 +77,15 @@ const features = [
   },
   {
     icon: Share2,
-    title: "Shareable links",
+    title: "Share and save",
     description:
-      "Share a link that encodes the exact chart, data, and options, so a teammate sees what you see.",
+      "Share a link that encodes the exact chart, data, and options, or save it in your browser for later.",
   },
   {
-    icon: BookmarkCheck,
-    title: "Saved charts",
+    icon: ImageDown,
+    title: "PNG, SVG, and image URLs",
     description:
-      "Save a chart in your browser and it is still there after a refresh.",
-  },
-  {
-    icon: Copy,
-    title: "One-click copy",
-    description:
-      "Copy one self-contained TSX component, no new dependency beyond shadcn/ui and Recharts.",
+      "Download any chart, or copy an image URL or README snippet that renders it in light or dark.",
   },
 ];
 
@@ -137,8 +137,8 @@ export default function Home() {
 
             <p className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:fill-mode-both max-w-2xl text-lg text-balance text-muted-foreground duration-700 delay-[160ms]">
               An open source shadcn/ui chart component library and generator.
-              Paste a CSV or JSON, preview 13 chart types, then copy the code. No config,
-              no account.
+              Paste a CSV or JSON, preview 13 chart types, then copy the code or
+              install it with one shadcn CLI command. No config, no account.
             </p>
 
             <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:fill-mode-both flex flex-wrap items-center justify-center gap-3 duration-700 delay-[240ms]">
@@ -269,7 +269,16 @@ export default function Home() {
                         <span className="font-medium text-foreground">
                           Copy component
                         </span>{" "}
-                        and drop the code into a file in your app.
+                        and drop the code into a file in your app. Or click{" "}
+                        <span className="font-medium text-foreground">
+                          Get install command
+                        </span>{" "}
+                        for one{" "}
+                        <code className="font-mono text-foreground">
+                          shadcn add
+                        </code>{" "}
+                        command that adds the chart, the chart primitive, and
+                        Recharts for you, so you can skip steps 1 and 2.
                       </p>
                     </div>
                   </CardContent>
@@ -303,8 +312,8 @@ export default function Home() {
               skips that trade-off. Paste a CSV, pick from 13 chart types, and
               copy a self-contained TSX component built on shadcn/ui and
               Recharts, the same primitives your project likely already uses.
-              Nothing to install, no account to create, and the code is yours to
-              edit the moment you paste it.
+              No new dependency, no account to create, and the code is yours to
+              edit the moment it lands in your project.
             </p>
             <p className="max-w-2xl text-muted-foreground">
               If you are not a developer, here is the short version: a

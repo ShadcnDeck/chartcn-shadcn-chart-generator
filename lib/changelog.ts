@@ -5,6 +5,7 @@ import v020 from "@/public/changelog/v0.2.0.webp"
 import v030 from "@/public/changelog/v0.3.0.webp"
 import v040 from "@/public/changelog/v0.4.0.webp"
 import v050 from "@/public/changelog/v0.5.0.webp"
+import v060 from "@/public/changelog/v0.6.0.webp"
 
 export type ChangeKind = "added" | "changed" | "fixed" | "removed"
 
@@ -27,6 +28,22 @@ export const repoUrl = "https://github.com/ShadcnDeck/chartcn-shadcn-chart-gener
 // Newest first. The first entry is the current version shown in the site header.
 // Keep in sync with CHANGELOG.md and the version in package.json.
 export const releases: Release[] = [
+  {
+    version: "0.6.0",
+    date: "2026-11-02",
+    title: "Install charts with the shadcn CLI",
+    description:
+      "Click Get install command on any chart page for one `shadcn add` command that adds the chart, with your data and options, to your project. It works with npm, pnpm, yarn and bun.",
+    image: v060,
+    changes: [
+      { kind: "added", text: "One-command install with `npx shadcn@latest add`, generated for each chart." },
+      { kind: "added", text: "Install commands for npm, pnpm, yarn and bun." },
+      { kind: "added", text: "The CLI adds shadcn's `chart` component for you if it's missing." },
+      { kind: "changed", text: "Install commands expire at 12:00 AM IST. Generate a new one after that." },
+      { kind: "changed", text: "Each page in the sitemap now has its own last-updated date." },
+      { kind: "fixed", text: "Canonical and Open Graph URLs pointed at a redirect instead of the page." },
+    ],
+  },
   {
     version: "0.5.0",
     date: "2026-09-25",

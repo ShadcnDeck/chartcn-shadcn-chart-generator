@@ -12,7 +12,12 @@ export const faqs: Faq[] = [
   {
     question: "Do I need to install a new npm package to use these charts?",
     answer:
-      "No. ChartCN generates code built on shadcn/ui's own chart primitives and Recharts, the same libraries most shadcn/ui projects already use. The copied component drops straight into your codebase without adding a new dependency.",
+      "No. ChartCN generates code built on shadcn/ui's own chart primitives and Recharts, the same libraries most shadcn/ui projects already use. The copied or CLI-installed component drops straight into your codebase without adding a new dependency.",
+  },
+  {
+    question: "Can I install a chart with the shadcn CLI?",
+    answer:
+      "Yes. On any chart page, click Get install command to get one shadcn add command (npm, pnpm, yarn, or bun) for that chart, with your data, options, and colors. It adds the component to components/charts/ and installs shadcn's chart component if your project doesn't have it yet. Commands expire at 12:00 AM IST, so generate a new one after that.",
   },
   {
     question: "What chart types are supported?",

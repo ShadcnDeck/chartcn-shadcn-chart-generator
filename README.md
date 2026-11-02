@@ -3,7 +3,7 @@
 <img width="1920" height="1080" alt="Chartcn - Open Source Shadcn Chart" src="https://github.com/user-attachments/assets/16029aa9-890e-4886-b1c1-7a5a0a407ec3" />
 
 
-**ChartCN** is a free, open source data-to-chart generator for [shadcn/ui](https://ui.shadcn.com) and React. Paste a CSV or a JSON API response, preview 13 chart types built on [Recharts](https://recharts.org), then copy a self-contained TSX component into your project. No install, no account, no new npm dependency beyond shadcn/ui and Recharts.
+**ChartCN** is a free, open source data-to-chart generator for [shadcn/ui](https://ui.shadcn.com) and React. Paste a CSV or a JSON API response, preview 13 chart types built on [Recharts](https://recharts.org), then copy a self-contained TSX component into your project or install it with one `shadcn add` command. No account, no new npm dependency beyond shadcn/ui and Recharts.
 
 🔗 **Live app:** [www.shadcndeck.com/chartcn](https://www.shadcndeck.com/chartcn)
 
@@ -14,6 +14,7 @@
 - [Why ChartCN](#why-chartcn)
 - [Features](#features)
 - [Chart types](#chart-types)
+- [Install with the shadcn CLI](#install-with-the-shadcn-cli)
 - [Getting started](#getting-started)
 - [Data formats](#data-formats)
 - [Export modes](#export-modes)
@@ -28,7 +29,7 @@
 
 ## Why ChartCN
 
-Most chart libraries hand you a black box: a new dependency with its own design system that never quite matches your app. ChartCN skips that trade-off. Paste a CSV or JSON, pick from 13 chart types, and copy a self-contained TSX component built on shadcn/ui and Recharts — the same primitives most shadcn/ui projects already use. Nothing to install, no account to create, and the code is yours to edit the moment you paste it.
+Most chart libraries hand you a black box: a new dependency with its own design system that never quite matches your app. ChartCN skips that trade-off. Paste a CSV or JSON, pick from 13 chart types, and copy a self-contained TSX component built on shadcn/ui and Recharts — the same primitives most shadcn/ui projects already use — or install it with one shadcn CLI command. No new dependency, no account to create, and the code is yours to edit the moment it lands in your project.
 
 If you're not a developer: a "chart component" is a small piece of code that draws a chart and matches the look of the app around it. ChartCN builds that piece of code from a CSV — the same file format Excel, Google Sheets, or a database export already produces. Hand it to a developer on your team and it drops into the product in minutes, with no redesign required.
 
@@ -37,6 +38,7 @@ If you're not a developer: a "chart component" is a small piece of code that dra
 - **13 chart types built in** — Bar, Horizontal Bar, Line, Area, Combo (bar + line), Pie/Donut, Radar, Scatter, Radial/Gauge, KPI Sparkline cards, Interactive Area (range buttons + zoom), Waterfall, and Heatmap
 - **Paste any tabular data** — CSV, JSON (arrays of objects, `{ data: [...] }` wrappers, and more), TSV copied from Excel or Google Sheets, or a Markdown table. The format is detected automatically; upload a file or edit the table directly
 - **Your field names in the code** — the generated component uses your real column / JSON keys (`{ month: "Jan", revenue: 42000 }`), so it accepts your API response without mapping code
+- **Install with the shadcn CLI** — click **Get install command** for one `npx shadcn@latest add <url>` command (npm, pnpm, yarn, or bun) that adds your chart, with its data and options, to your project
 - **Variant toggles per chart** — stacked or grouped bars, 100% stacking, smooth lines, donut style, and more
 - **Automatic date axes** — a date-like category column (`2024-01-01`, `1/5/2024`, ...) gets formatted date ticks automatically
 - **Custom colors** — customize series and category colors and see the change reflected live in the copied code
@@ -64,6 +66,24 @@ If you're not a developer: a "chart component" is a small piece of code that dra
 | Waterfall | Walk a starting value through increases and decreases to a total (MRR bridges, P&L) |
 | Heatmap | A value grid shaded by intensity: cohort retention, activity by day and hour |
 
+## Install with the shadcn CLI
+
+The quickest way to get a chart into your project. On any chart page, set up your data and options, then click **Get install command**. ChartCN saves that chart and gives you a command for your package manager:
+
+```bash
+npx shadcn@latest add https://www.shadcndeck.com/chartcn/r/<id>.json
+pnpm dlx shadcn@latest add https://www.shadcndeck.com/chartcn/r/<id>.json
+yarn shadcn@latest add https://www.shadcndeck.com/chartcn/r/<id>.json
+bunx --bun shadcn@latest add https://www.shadcndeck.com/chartcn/r/<id>.json
+```
+
+Run it in a shadcn/ui project and the CLI:
+
+- adds the component as `components/charts/<type>-chart-<id>.tsx` (for example `bar-chart-1a2b3c.tsx`, exporting `BarChart1a2b3c`), so two charts of the same type never collide
+- installs shadcn's `chart` component, and with it Recharts, if your project doesn't have them yet
+
+The same chart always gets the same command, and any edit to the chart needs a new one. **Commands expire at 12:00 AM IST**, when saved charts are cleared, so generate a new one after that. The component you installed stays in your project; only the link stops working.
+
 ## Getting started
 
 Clone the repo and run it locally:
@@ -81,8 +101,16 @@ Open [http://localhost:3000](http://localhost:3000).
 - `/charts` — gallery of all 13 chart types
 - `/charts/[type]` — paste/upload/edit data, tweak variants, customize colors, copy the component
 - `/api/chart?c=...` — the chart as a static SVG image (see [Images](#images-for-readmes-and-docs))
+- `/api/registry` (POST) and `/r/<id>.json` — save a chart and serve it as a shadcn registry item (see [Install with the shadcn CLI](#install-with-the-shadcn-cli))
 
-To use ChartCN in your own shadcn/ui project, you just need the chart primitive and Recharts:
+The install command needs [Vercel Blob](https://vercel.com/docs/vercel-blob) to store charts. To use it locally or on your own deployment, set these environment variables (in `.env.local` for local runs):
+
+- `BLOB_READ_WRITE_TOKEN` — your Vercel Blob store token
+- `CRON_SECRET` — protects `/api/cron/purge-registry`, which Vercel Cron calls nightly (see `vercel.json`) to clear saved charts
+
+Everything else works without them.
+
+To copy charts by hand instead of using the CLI, your shadcn/ui project just needs the chart primitive and Recharts:
 
 ```bash
 npx shadcn@latest add chart
@@ -151,6 +179,7 @@ Below the preview:
 - [Recharts](https://recharts.org)
 - [Papa Parse](https://www.papaparse.com) (CSV parsing)
 - [Shiki](https://shiki.style) (code highlighting)
+- [Vercel Blob](https://vercel.com/docs/vercel-blob) (saved charts for CLI installs)
 
 ## FAQ
 
@@ -158,7 +187,10 @@ Below the preview:
 ChartCN is a free, open source tool that turns your CSV or JSON data into a ready-to-use chart component for shadcn/ui and React. Paste or upload a CSV, preview the chart live, and copy the generated TSX code straight into your project.
 
 **Do I need to install a new npm package to use these charts?**
-No. ChartCN generates code built on shadcn/ui's own chart primitives and Recharts, the same libraries most shadcn/ui projects already use. The copied component drops straight into your codebase without adding a new dependency.
+No. ChartCN generates code built on shadcn/ui's own chart primitives and Recharts, the same libraries most shadcn/ui projects already use. The copied or CLI-installed component drops straight into your codebase without adding a new dependency.
+
+**Can I install a chart with the shadcn CLI?**
+Yes. On any chart page, click **Get install command** for one `shadcn add` command (npm, pnpm, yarn, or bun) with your data, options, and colors. It adds the component to `components/charts/` and installs shadcn's `chart` component if it's missing. Commands expire at 12:00 AM IST, so generate a new one after that.
 
 **What chart types are supported?**
 ChartCN supports 13 chart types: Bar, Horizontal Bar, Line, Area, Combo (bar and line together), Pie/Donut, Radar, Scatter, Radial/Gauge, KPI Sparkline cards, Interactive Area, Waterfall, and Heatmap. Each one comes with its own variant toggles, like stacked or grouped bars, smooth lines, or donut style.

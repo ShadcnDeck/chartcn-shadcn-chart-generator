@@ -36,13 +36,15 @@ export const metadata: Metadata = {
     template: `%s | ${SITE_NAME}`,
   },
   description,
+  // Full URLs, not "/": under the /chartcn basePath, "/" resolves against
+  // metadataBase to /chartcn/, which redirects to /chartcn.
   alternates: {
-    canonical: "/",
+    canonical: SITE_URL,
   },
   openGraph: {
     title,
     description,
-    url: "/",
+    url: SITE_URL,
     siteName: SITE_NAME,
     type: "website",
     images: [

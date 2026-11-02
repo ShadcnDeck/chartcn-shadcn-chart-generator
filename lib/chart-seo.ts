@@ -22,6 +22,9 @@ export interface ChartSeo {
   faqs: Faq[]
   related: ChartType[]
   imageAlt: string
+  /** Last time this page's content changed (YYYY-MM-DD), used as its sitemap
+   * lastmod. Bump it when you edit this entry or the chart itself. */
+  updated: string
 }
 
 const COMMON_DATA_NOTE =
@@ -29,6 +32,7 @@ const COMMON_DATA_NOTE =
 
 export const chartSeo: Record<ChartType, ChartSeo> = {
   bar: {
+    updated: "2026-11-02",
     noun: "a bar chart",
     keyword: "shadcn bar chart",
     title: "Shadcn Bar Chart: Copy-Paste React Component",
@@ -83,6 +87,7 @@ export const chartSeo: Record<ChartType, ChartSeo> = {
   },
 
   "horizontal-bar": {
+    updated: "2026-11-02",
     noun: "a horizontal bar chart",
     keyword: "shadcn horizontal bar chart",
     title: "Shadcn Horizontal Bar Chart for React",
@@ -131,6 +136,7 @@ export const chartSeo: Record<ChartType, ChartSeo> = {
   },
 
   line: {
+    updated: "2026-11-02",
     noun: "a line chart",
     keyword: "shadcn line chart",
     title: "Shadcn Line Chart: React + Recharts Component",
@@ -178,6 +184,7 @@ export const chartSeo: Record<ChartType, ChartSeo> = {
   },
 
   area: {
+    updated: "2026-11-02",
     noun: "an area chart",
     keyword: "shadcn area chart",
     title: "Shadcn Area Chart: Stacked & Gradient React Chart",
@@ -222,6 +229,7 @@ export const chartSeo: Record<ChartType, ChartSeo> = {
   },
 
   combo: {
+    updated: "2026-11-02",
     noun: "a combo chart",
     keyword: "shadcn combo chart",
     title: "Shadcn Combo Chart: Bar and Line Together",
@@ -264,6 +272,7 @@ export const chartSeo: Record<ChartType, ChartSeo> = {
   },
 
   pie: {
+    updated: "2026-11-02",
     noun: "a pie or donut chart",
     keyword: "shadcn pie chart",
     title: "Shadcn Pie Chart & Donut Chart for React",
@@ -311,6 +320,7 @@ export const chartSeo: Record<ChartType, ChartSeo> = {
   },
 
   radar: {
+    updated: "2026-11-02",
     noun: "a radar chart",
     keyword: "shadcn radar chart",
     title: "Shadcn Radar Chart (Spider Chart) for React",
@@ -352,6 +362,7 @@ export const chartSeo: Record<ChartType, ChartSeo> = {
   },
 
   scatter: {
+    updated: "2026-11-02",
     noun: "a scatter chart",
     keyword: "shadcn scatter chart",
     title: "Shadcn Scatter Chart: Plot X vs. Y in React",
@@ -392,6 +403,7 @@ export const chartSeo: Record<ChartType, ChartSeo> = {
   },
 
   radial: {
+    updated: "2026-11-02",
     noun: "a radial chart or gauge",
     keyword: "shadcn radial chart",
     title: "Shadcn Radial Chart & Gauge for React",
@@ -437,6 +449,7 @@ export const chartSeo: Record<ChartType, ChartSeo> = {
   },
 
   kpi: {
+    updated: "2026-11-02",
     noun: "a KPI card",
     keyword: "shadcn kpi card",
     title: "Shadcn KPI Card with Sparkline (React)",
@@ -483,6 +496,7 @@ export const chartSeo: Record<ChartType, ChartSeo> = {
   },
 
   interactive: {
+    updated: "2026-11-02",
     noun: "an interactive area chart",
     keyword: "shadcn interactive chart",
     title: "Shadcn Interactive Area Chart with Date Range",
@@ -530,6 +544,7 @@ export const chartSeo: Record<ChartType, ChartSeo> = {
   },
 
   waterfall: {
+    updated: "2026-11-02",
     noun: "a waterfall chart",
     keyword: "react waterfall chart",
     title: "React Waterfall Chart for Shadcn UI (Recharts)",
@@ -578,6 +593,7 @@ export const chartSeo: Record<ChartType, ChartSeo> = {
   },
 
   heatmap: {
+    updated: "2026-11-02",
     noun: "a heatmap",
     keyword: "react heatmap",
     title: "React Heatmap for Shadcn UI: Cohort Grid",

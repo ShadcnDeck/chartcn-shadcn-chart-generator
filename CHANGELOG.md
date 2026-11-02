@@ -7,6 +7,7 @@ Check the **Upgrading** notes before re-copying a component.
 
 | Version | Date | Release |
 | :-- | :-- | :-- |
+| [0.6.0](#060--2026-11-02) | 2026-11-02 | Install charts with the shadcn CLI |
 | [0.5.0](#050--2026-09-25)* | 2026-09-25 | Five new charts and JSON input |
 | [0.4.0](#040--2026-09-15) | 2026-09-15 | A new look for Chartcn |
 | [0.3.0](#030--2026-08-13) | 2026-08-13 | Combo charts and share links |
@@ -14,6 +15,21 @@ Check the **Upgrading** notes before re-copying a component.
 | [0.1.0](#010--2026-07-21) | 2026-07-21 | First release |
 
 \* Has an upgrade note
+
+## 0.6.0 — 2026-11-02
+
+### Install charts with the shadcn CLI
+
+Click **Get install command** on any chart page for one `shadcn add` command that adds the chart, with your data and options, to your project. It works with npm, pnpm, yarn and bun.
+
+<img src="public/changelog/v0.6.0.webp" alt="Chartcn v0.6.0" width="720" />
+
+- **New:** One-command install with `npx shadcn@latest add`, generated for each chart
+- **New:** Install commands for npm, pnpm, yarn and bun
+- **New:** The CLI adds shadcn's `chart` component for you if it's missing
+- **Improved:** Install commands expire at 12:00 AM IST. Generate a new one after that
+- **Improved:** Each page in the sitemap now has its own last-updated date
+- **Fixed:** Canonical and Open Graph URLs pointed at a redirect instead of the page
 
 ## 0.5.0 — 2026-09-25
 
