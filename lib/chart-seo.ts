@@ -2,7 +2,7 @@ import type { Faq } from "@/lib/faq"
 import type { ChartType } from "@/types/chart"
 
 /** Per-chart search content: each chart page targets its own keyword with
- * its own title, copy, FAQs, and related links, so the 13 pages don't
+ * its own title, copy, FAQs, and related links, so the 14 pages don't
  * compete with each other or read as templated duplicates. */
 export interface ChartSeo {
   /** Primary search phrase the page targets. */
@@ -87,7 +87,7 @@ export const chartSeo: Record<ChartType, ChartSeo> = {
   },
 
   "horizontal-bar": {
-    updated: "2026-11-02",
+    updated: "2026-11-03",
     noun: "a horizontal bar chart",
     keyword: "shadcn horizontal bar chart",
     title: "Shadcn Horizontal Bar Chart for React",
@@ -131,7 +131,7 @@ export const chartSeo: Record<ChartType, ChartSeo> = {
           "Long category names don't fit under vertical bars, and rankings are easier to scan top to bottom. For time series, vertical bars are usually the better fit.",
       },
     ],
-    related: ["bar", "radial", "kpi"],
+    related: ["bar", "funnel", "kpi"],
     imageAlt: "Horizontal shadcn/ui bar chart ranking frameworks by GitHub stars",
   },
 
@@ -449,7 +449,7 @@ export const chartSeo: Record<ChartType, ChartSeo> = {
   },
 
   kpi: {
-    updated: "2026-11-02",
+    updated: "2026-11-03",
     noun: "a KPI card",
     keyword: "shadcn kpi card",
     title: "Shadcn KPI Card with Sparkline (React)",
@@ -491,7 +491,7 @@ export const chartSeo: Record<ChartType, ChartSeo> = {
           "Area and line sparklines fit the data's min to max so the trend is visible. The bar variant keeps a zero baseline.",
       },
     ],
-    related: ["radial", "interactive", "line"],
+    related: ["radial", "funnel", "line"],
     imageAlt: "Shadcn/ui KPI card showing revenue, a 7.9% increase badge, and a sparkline",
   },
 
@@ -638,6 +638,60 @@ export const chartSeo: Record<ChartType, ChartSeo> = {
     ],
     related: ["radar", "pie", "interactive"],
     imageAlt: "Heatmap of weekly cohort retention shaded by percentage",
+  },
+  funnel: {
+    updated: "2026-11-03",
+    noun: "a funnel chart",
+    keyword: "shadcn funnel chart",
+    title: "Shadcn Funnel Chart: Conversion & Drop-off",
+    description:
+      "Build a funnel chart for shadcn/ui and React with stage-to-stage conversion, drop-off, and overall conversion. Paste CSV or JSON, copy the TSX.",
+    h1: "Shadcn Funnel Chart",
+    intro:
+      "Show how many people make it through each step, with the conversion rate and drop-off between stages, as a connected funnel or rounded bars.",
+    whenToUse: {
+      lead: "Funnel charts show where people drop out of a sequence of steps.",
+      cases: [
+        "Signup and onboarding: visit, sign up, activate, pay",
+        "E-commerce checkout: product view, cart, checkout, purchase",
+        "Sales pipeline: lead, qualified, proposal, closed won",
+      ],
+    },
+    dataNotes: [
+      "Use 2 columns: Stage,Value, in order from the first step to the last.",
+      "Each stage's conversion is its value divided by the previous stage's. The footer shows overall conversion from first to last.",
+      "Blank rows are skipped. A stage larger than the one before it shows growth (+%) instead of drop-off.",
+    ],
+    options: [
+      { name: "Shape", detail: "A connected trapezoid funnel, or centered rounded bars on a muted track." },
+      { name: "Conversion", detail: "Show each stage as a % of the previous stage (Step) or of the first stage (Overall)." },
+      { name: "Drop-off", detail: "Show the % lost since the previous stage beside each conversion rate." },
+      { name: "Colors", detail: "One color faded from top to bottom (Gradient), or a palette color per stage." },
+    ],
+    faqs: [
+      {
+        question: "How do you make a funnel chart in shadcn/ui?",
+        answer:
+          "Paste your stages and counts into ChartCN and copy the generated component. It's plain React and Tailwind on shadcn/ui's theme variables, so it matches your app in light and dark mode with no new dependency.",
+      },
+      {
+        question: "Does the funnel show conversion and drop-off rates?",
+        answer:
+          "Yes. Every stage shows its conversion from the previous stage (or from the first, if you switch), with its drop-off beside it, and the footer shows overall conversion. Hover or focus a stage for exact counts.",
+      },
+      {
+        question: "Why not use the Recharts Funnel component?",
+        answer:
+          "Recharts fits labels inside the trapezoids, where the narrow bottom stages run out of room. ChartCN lays each stage out as a row instead, so names and numbers stay readable at any width, including on phones.",
+      },
+      {
+        question: "Is the funnel chart accessible?",
+        answer:
+          "Stages are an ordered list. Each one can be reached with the keyboard and is labeled with its name, count, and conversion rate, and the entry animation respects reduced-motion settings.",
+      },
+    ],
+    related: ["horizontal-bar", "waterfall", "kpi"],
+    imageAlt: "Funnel chart of a signup flow from site visit to paid, with step conversion and drop-off rates",
   },
 }
 

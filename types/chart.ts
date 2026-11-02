@@ -12,6 +12,7 @@ export type ChartType =
   | "interactive"
   | "waterfall"
   | "heatmap"
+  | "funnel"
 
 export interface ChartDataRow {
   [key: string]: string | number | null
@@ -38,6 +39,10 @@ export interface ChartOptions {
   showBrush?: boolean // interactive
   showTotal?: boolean // waterfall
   heatFormat?: "number" | "percent" // heatmap
+  funnelShape?: "funnel" | "bars" // funnel
+  funnelRate?: "previous" | "first" // funnel: conversion shown per stage
+  showDropoff?: boolean // funnel
+  funnelColors?: "gradient" | "palette" // funnel
   tooltipStyle?: "breakdown" | "simple" // multi-series bar, horizontal-bar, line, area
   customColors?: Record<string, string> // all types, keyed by series key or category label
   exportMode?: "inline" | "props"

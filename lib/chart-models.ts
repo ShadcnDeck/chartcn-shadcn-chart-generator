@@ -1,6 +1,6 @@
 /** Data shaping for the chart types whose rows need more than a remap before
  * they can be drawn: interactive (date range), waterfall (running totals),
- * and heatmap (a value grid). Shared by the live preview, the static SVG
+ * heatmap (a value grid), and funnel (stage-to-stage conversion). Shared by the live preview, the static SVG
  * renderer, and — as mirrored code — the generated components. */
 
 import {
@@ -164,4 +164,73 @@ export function formatHeatValue(value: number, format: ChartOptions["heatFormat"
 
 export function heatColor(customColors?: Record<string, string>): string {
   return resolveColor(HEAT_KEY, 0, customColors)
+}
+
+// ---------------------------------------------------------------- funnel
+
+/** customColors key for the gradient funnel's single base color. */
+export const FUNNEL_KEY = "funnel"
+
+export interface FunnelStage {
+  label: string
+  value: number
+  /** Width relative to the largest stage, 0..1. */
+  share: number
+  /** Conversion from the previous stage; null for the first stage or after a zero. */
+  fromPrevious: number | null
+  /** Conversion from the first stage; null when the first stage is zero. */
+  fromFirst: number | null
+  /** Count lost since the previous stage (negative when the stage grew). */
+  lost: number | null
+}
+
+/** Column 1 names the stages, column 2 holds each stage's count. Blank rows
+ * are skipped and negative counts clamp to 0. Widths are relative to the
+ * largest stage, so a stage that grows (e.g. re-entries) still draws. */
+export function computeFunnel(data: ParsedChartData): FunnelStage[] {
+  const key = getSeries(data)[0]?.key
+  if (!key) return []
+  const rows = toChartRows(data).filter((row) => typeof row[key] === "number")
+  const values = rows.map((row) => Math.max(0, Number(row[key])))
+  const max = Math.max(0, ...values)
+  const first = values[0] ?? 0
+  return rows.map((row, index) => {
+    const value = values[index]
+    const previous = index > 0 ? values[index - 1] : null
+    return {
+      label: String(row[CATEGORY_KEY] ?? ""),
+      value,
+      share: max > 0 ? value / max : 0,
+      fromPrevious: previous ? value / previous : null,
+      fromFirst: first > 0 ? value / first : null,
+      lost: previous === null ? null : previous - value,
+    }
+  })
+}
+
+/** 0.625 -> "62.5%", 0.5 -> "50%". */
+export function formatRate(rate: number): string {
+  return new Intl.NumberFormat("en-US", { style: "percent", maximumFractionDigits: 1 }).format(rate)
+}
+
+/** Opacity (as a % of the base color) for gradient stage `index`: the top
+ * stage is the full color, fading evenly to 45% at the bottom. */
+export function funnelMix(index: number, count: number): number {
+  return count > 1 ? Math.round(100 - (index * 55) / (count - 1)) : 100
+}
+
+/** Stage fill: one base color faded per stage ("gradient"), or a palette
+ * color per stage keyed by its label ("palette"). */
+export function funnelStageColor(
+  stage: FunnelStage,
+  index: number,
+  count: number,
+  options?: ChartOptions
+): string {
+  if ((options?.funnelColors ?? "gradient") === "palette") {
+    return resolveColor(stage.label, index, options?.customColors)
+  }
+  const base = resolveColor(FUNNEL_KEY, 0, options?.customColors)
+  const mix = funnelMix(index, count)
+  return mix === 100 ? base : `color-mix(in oklab, ${base} ${mix}%, transparent)`
 }

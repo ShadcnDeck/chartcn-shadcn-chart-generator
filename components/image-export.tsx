@@ -52,10 +52,10 @@ export function ImageExport({
     if (!container) return
     try {
       setError(null)
-      // The heatmap is an HTML grid, not a Recharts SVG, so its image comes
-      // from the static renderer the image URL uses.
+      // The heatmap and funnel are HTML, not a Recharts SVG, so their images
+      // come from the static renderer the image URL uses.
       const { svg, width, height } =
-        type === "heatmap"
+        type === "heatmap" || type === "funnel"
           ? staticSvg(container)
           : buildChartSvg(container, { legend, header, footer, legendBelow })
       const fileName = `${type}-chart.${format}`

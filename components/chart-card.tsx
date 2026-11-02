@@ -6,6 +6,7 @@ import {
   ChartColumnDecreasing,
   ChartBarBig,
   ChartNoAxesCombined,
+  Funnel,
   Gauge,
   Grid3x3,
   LineChart,
@@ -49,6 +50,7 @@ const chartIcons: Record<ChartType, LucideIcon> = {
   interactive: ChartArea,
   waterfall: ChartColumnDecreasing,
   heatmap: Grid3x3,
+  funnel: Funnel,
 }
 
 export function ChartCard({ type }: ChartCardProps) {

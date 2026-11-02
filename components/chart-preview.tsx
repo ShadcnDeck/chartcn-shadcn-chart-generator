@@ -3,6 +3,7 @@ import { ChartNoAxesColumn } from "lucide-react"
 import { AreaChart } from "@/components/charts/area-chart"
 import { BarChart } from "@/components/charts/bar-chart"
 import { ComboChart } from "@/components/charts/combo-chart"
+import { FunnelChart } from "@/components/charts/funnel-chart"
 import { HeatmapChart } from "@/components/charts/heatmap-chart"
 import { HorizontalBarChart } from "@/components/charts/horizontal-bar-chart"
 import { InteractiveChart } from "@/components/charts/interactive-chart"
@@ -53,6 +54,8 @@ export function ChartPreview({ type, data, options }: ChartPreviewProps) {
       return <WaterfallChart data={data} options={options} />
     case "heatmap":
       return <HeatmapChart data={data} options={options} />
+    case "funnel":
+      return <FunnelChart data={data} options={options} />
     default: {
       const exhaustive: never = type
       throw new Error(`Unhandled chart type: ${exhaustive}`)

@@ -4,14 +4,32 @@ import { BreadcrumbChip } from "@/components/breadcrumb-chip"
 import { ChartCard } from "@/components/chart-card"
 import { JsonLd } from "@/components/json-ld"
 import { chartTypes } from "@/lib/sample-data"
-import { gallerySchema } from "@/lib/schema"
+import { GALLERY_TITLE, gallerySchema } from "@/lib/schema"
+import { SITE_NAME } from "@/lib/seo"
 
+const description = `Browse all ${chartTypes.length} shadcn/ui chart types: bar, horizontal bar, line, area, combo, pie, radar, scatter, radial, KPI sparkline, interactive area, waterfall, heatmap, and funnel. Preview live sample data, then paste your own CSV or JSON to generate the component.`
+
+// openGraph/twitter replace the layout's whole objects, so the share banner
+// and site name are repeated here; otherwise shares show the home page.
 export const metadata: Metadata = {
-  title: "Chart Gallery: 13 Shadcn UI Chart Types",
-  description:
-    "Browse all 13 shadcn/ui chart types: bar, horizontal bar, line, area, combo, pie, radar, scatter, radial, KPI sparkline, interactive area, waterfall, and heatmap. Preview live sample data, then paste your own CSV or JSON to generate the component.",
+  title: GALLERY_TITLE,
+  description,
   alternates: {
     canonical: "/charts",
+  },
+  openGraph: {
+    title: GALLERY_TITLE,
+    description,
+    url: "/charts",
+    siteName: SITE_NAME,
+    type: "website",
+    images: [{ url: "og-banner.jpg", width: 1200, height: 630, alt: GALLERY_TITLE }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: GALLERY_TITLE,
+    description,
+    images: ["og-banner.jpg"],
   },
 }
 

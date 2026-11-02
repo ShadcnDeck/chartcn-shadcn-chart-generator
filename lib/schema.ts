@@ -93,6 +93,10 @@ export function homeSchema(faqs: Faq[]) {
   }
 }
 
+/** The /charts page title (before the " | ChartCN" suffix), led by the
+ * "shadcn charts" search phrase. Also the gallery's schema.org name. */
+export const GALLERY_TITLE = `Shadcn Charts: ${chartTypes.length} Free React Chart Types`
+
 export function gallerySchema() {
   const url = `${SITE_URL}/charts`
   return {
@@ -104,7 +108,7 @@ export function gallerySchema() {
         "@type": "CollectionPage",
         "@id": `${url}#webpage`,
         url,
-        name: "Shadcn UI Chart Gallery",
+        name: GALLERY_TITLE,
         isPartOf: { "@id": WEBSITE_ID },
         breadcrumb: { "@id": `${url}#breadcrumb` },
         mainEntity: {

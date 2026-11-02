@@ -15,7 +15,13 @@ import {
   comboRenderType,
   horizontalLabelWidth,
 } from "@/lib/chart-style"
-import { WATERFALL_KINDS, heatColor, waterfallColor } from "@/lib/chart-models"
+import {
+  FUNNEL_KEY,
+  WATERFALL_KINDS,
+  computeFunnel,
+  heatColor,
+  waterfallColor,
+} from "@/lib/chart-models"
 import type { ChartDataRow, ChartOptions, ChartType, ParsedChartData } from "@/types/chart"
 
 const TICK_FORMATTER =
@@ -165,7 +171,7 @@ function renderShell(opts: {
     ? "export function Chart({ data }: ChartProps) {"
     : "export function Chart() {"
   const preReturn = opts.preReturn?.length
-    ? `${opts.preReturn.map((line) => `  ${line}`).join("\n")}\n\n`
+    ? `${opts.preReturn.map((line) => (line ? `  ${line}` : "")).join("\n")}\n\n`
     : ""
   const helpers = opts.helpers ? `\n\n${opts.helpers}` : ""
   const imports = opts.imports.length > 0 ? `${opts.imports.join("\n")}\n\n` : ""
@@ -1354,6 +1360,217 @@ const heatColor = ${JSON.stringify(color)}`
   })
 }
 
+function funnel(data: ParsedChartData, options?: ChartOptions): string {
+  const fields: Fields = { ...getExportFields(data) }
+  fields.series = fields.series.slice(0, 1)
+  const valueField = fields.series[0]
+  const rows = toExportRows(data).map((row) => ({
+    [fields.category.key]: row[fields.category.key],
+    ...(valueField ? { [valueField.key]: row[valueField.key] } : {}),
+  }))
+  const customColors = options?.customColors
+  const shape = options?.funnelShape ?? "funnel"
+  const rate = options?.funnelRate ?? "previous"
+  const showDropoff = options?.showDropoff ?? true
+  const palette = (options?.funnelColors ?? "gradient") === "palette"
+  const isProps = options?.exportMode === "props"
+  const valueLabel = valueField?.label ?? "Value"
+  const valueAccess = toPropertyAccess("row", valueField?.key ?? "value")
+  const labelAccess = `String(${toPropertyAccess("row", fields.category.key)})`
+
+  const colorDecl = palette
+    ? `/** Stage colors, by position from the top of the funnel. */
+const stageColors = [${computeFunnel(data)
+        .map((stage, index) => JSON.stringify(resolveColor(stage.label, index, customColors)))
+        .join(", ")}]`
+    : `/** One base color, faded per stage from the top of the funnel to the bottom. */
+const funnelColor = ${JSON.stringify(resolveColor(FUNNEL_KEY, 0, customColors))}`
+
+  const stageColor = palette
+    ? `function stageColor(index: number) {
+  return stageColors[index % stageColors.length]
+}`
+    : `function stageColor(index: number, count: number) {
+  const mix = count > 1 ? Math.round(100 - (index * 55) / (count - 1)) : 100
+  return mix === 100 ? funnelColor : \`color-mix(in oklab, \${funnelColor} \${mix}%, transparent)\`
+}`
+
+  const conversion =
+    rate === "first"
+      ? "index === 0 ? 1 : stage.fromFirst"
+      : "index === 0 ? 1 : stage.fromPrevious"
+
+  const dropoff = showDropoff
+    ? `
+
+/** "−37.5%" for a drop, "+12%" when a stage grew, nothing when flat. */
+function Dropoff({ stage }: { stage: Stage }) {
+  if (stage.fromPrevious === null || stage.fromPrevious === 1) return null
+  const change = stage.fromPrevious - 1
+  return (
+    <span className={change < 0 ? "text-amber-700 dark:text-amber-400" : "text-emerald-700 dark:text-emerald-400"}>
+      {change < 0 ? "−" : "+"}
+      {formatRate(Math.abs(change))}
+    </span>
+  )
+}`
+    : ""
+
+  const helpers = `${stageColor}
+
+type Stage = {
+  label: string
+  value: number
+  /** Width relative to the largest stage, 0..1. */
+  share: number
+  fromPrevious: number | null
+  fromFirst: number | null
+  lost: number | null
+}
+
+const formatRate = (rate: number) =>
+  new Intl.NumberFormat("en-US", { style: "percent", maximumFractionDigits: 1 }).format(rate)
+
+/** Column 1 names each stage, column 2 is its count. Blank rows are skipped
+ * and negative counts clamp to 0. */
+function toStages(rows: ${isProps ? "ChartRow[]" : "typeof data"}): Stage[] {
+  const counted = rows.filter((row) => typeof ${valueAccess} === "number")
+  const values = counted.map((row) => Math.max(0, ${valueAccess} ?? 0))
+  const max = Math.max(0, ...values)
+  return counted.map((row, index) => {
+    const value = values[index]
+    const previous = index > 0 ? values[index - 1] : null
+    return {
+      label: ${labelAccess},
+      value,
+      share: max > 0 ? value / max : 0,
+      fromPrevious: previous ? value / previous : null,
+      fromFirst: values[0] > 0 ? value / values[0] : null,
+      lost: previous === null ? null : previous - value,
+    }
+  })
+}${dropoff}
+
+function FunnelTooltip({ stage, index }: { stage: Stage; index: number }) {
+  const rows: [string, string][] = [[${JSON.stringify(valueLabel)}, stage.value.toLocaleString("en-US")]]
+  if (index > 0) {
+    if (stage.fromPrevious !== null) rows.push(["From previous", formatRate(stage.fromPrevious)])
+    if (stage.fromFirst !== null) rows.push(["From first", formatRate(stage.fromFirst)])
+    if (stage.lost !== null) rows.push([stage.lost >= 0 ? "Dropped off" : "Gained", Math.abs(stage.lost).toLocaleString("en-US")])
+  }
+  return (
+    <div aria-hidden className="pointer-events-none absolute top-full left-1/2 z-20 mt-1.5 grid min-w-40 -translate-x-1/2 gap-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs shadow-xl">
+      <span className="font-medium text-foreground">{stage.label}</span>
+      {rows.map(([label, value]) => (
+        <div key={label} className="flex items-center justify-between gap-4">
+          <span className="text-muted-foreground">{label}</span>
+          <span className="font-mono font-medium text-foreground tabular-nums">{value}</span>
+        </div>
+      ))}
+    </div>
+  )
+}`
+
+  const colorCall = palette ? "stageColor(index)" : "stageColor(index, stages.length)"
+  const enter = `animationDelay: \`\${index * 70}ms\`, animationFillMode: "both"`
+  const shapeJsx =
+    shape === "bars"
+      ? `                <div className="flex h-11 justify-center rounded-lg bg-muted">
+                  <div
+                    className="h-full rounded-lg motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95"
+                    style={{ ${enter}, width: \`\${Math.max(stage.share, 0.02) * 100}%\`, backgroundColor: ${colorCall} }}
+                  />
+                </div>`
+      : `                <div
+                  className="h-11 w-full motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95"
+                  style={{
+                    animationDelay: \`\${index * 70}ms\`,
+                    animationFillMode: "both",
+                    backgroundColor: ${colorCall},
+                    clipPath: trapezoid(stage.share, stages[index + 1]?.share ?? stage.share),
+                  }}
+                />`
+
+  const jsx = `    <div className="flex w-full flex-col gap-3 py-2">
+      <ol
+        aria-label=${jsxString(`${valueLabel} by funnel stage`)}
+        className="grid grid-cols-[fit-content(6rem)_minmax(0,1fr)_auto] gap-x-3 gap-y-1 sm:grid-cols-[fit-content(9rem)_minmax(0,1fr)_auto]"
+        onMouseLeave={() => setActive(null)}
+      >
+        {stages.map((stage, index) => {
+          const conversion = ${conversion}
+          return (
+            <li
+              key={\`\${stage.label}-\${index}\`}
+              tabIndex={0}
+              aria-label={\`\${stage.label}: \${stage.value.toLocaleString("en-US")}\${conversion === null ? "" : \`, \${formatRate(conversion)} of ${rate} stage\`}\`}
+              className={\`col-span-3 grid grid-cols-subgrid items-center rounded-md outline-none transition-opacity duration-200 focus-visible:ring-2 focus-visible:ring-ring/50 \${active !== null && active !== index ? "opacity-40" : ""}\`}
+              onMouseEnter={() => setActive(index)}
+              onFocus={() => setActive(index)}
+              onBlur={() => setActive(null)}
+            >
+              <span className={\`text-sm leading-tight font-medium break-words transition-colors \${active === index ? "text-foreground" : "text-muted-foreground"}\`}>
+                {stage.label}
+              </span>
+              <div className="relative">
+${shapeJsx}
+                {active === index && <FunnelTooltip stage={stage} index={index} />}
+              </div>
+              <div className="flex flex-col items-end leading-tight tabular-nums">
+                <span className="text-sm font-medium text-foreground">{stage.value.toLocaleString("en-US")}</span>
+                <span className="flex flex-col items-end text-xs text-muted-foreground sm:flex-row sm:gap-1.5">
+                  {conversion === null ? "–" : formatRate(conversion)}${showDropoff ? "\n                  <Dropoff stage={stage} />" : ""}
+                </span>
+              </div>
+            </li>
+          )
+        })}
+      </ol>
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+        <span>% of ${rate} stage</span>
+        {overall !== null && (
+          <span>
+            Overall conversion <span className="font-medium text-foreground tabular-nums">{formatRate(overall)}</span>
+          </span>
+        )}
+      </div>
+    </div>`
+
+  return renderShell({
+    imports: ['import { useState } from "react"'],
+    configDecl: colorDecl,
+    rowType: buildRowType(fields, rows),
+    rows,
+    helpers:
+      shape === "funnel"
+        ? `${helpers}
+
+/** Top edge at this stage's width, bottom edge at the next stage's, so the
+ * rows read as one continuous funnel. Even a zero stage keeps a sliver. */
+function trapezoid(share: number, nextShare: number) {
+  const top = Math.max(share, 0.02) * 50
+  const bottom = Math.max(nextShare, 0.02) * 50
+  return \`polygon(\${50 - top}% 0, \${50 + top}% 0, \${50 + bottom}% 100%, \${50 - bottom}% 100%)\`
+}`
+        : helpers,
+    preReturn: [
+      "const [active, setActive] = useState<number | null>(null)",
+      "const stages = toStages(data)",
+      "const overall = stages.length > 1 ? stages[stages.length - 1].fromFirst : null",
+      "",
+      "if (stages.every((stage) => stage.value === 0)) {",
+      "  return (",
+      '    <div className="flex min-h-[200px] w-full items-center justify-center rounded-lg border border-dashed border-border text-sm text-muted-foreground">',
+      "      No stage values to chart yet",
+      "    </div>",
+      "  )",
+      "}",
+    ],
+    jsx,
+    exportMode: options?.exportMode,
+  })
+}
+
 export function generateComponentCode(
   type: ChartType,
   data: ParsedChartData,
@@ -1386,6 +1603,8 @@ export function generateComponentCode(
       return waterfall(data, options)
     case "heatmap":
       return heatmap(data, options)
+    case "funnel":
+      return funnel(data, options)
     default: {
       const exhaustive: never = type
       throw new Error(`Unhandled chart type: ${exhaustive}`)

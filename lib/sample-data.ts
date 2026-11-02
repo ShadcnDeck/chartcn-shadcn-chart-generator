@@ -95,6 +95,12 @@ Mar,100,68,55,47,,
 Apr,100,70,57,,,
 May,100,72,,,,
 Jun,100,,,,,`,
+  funnel: `Stage,Users
+Visited site,12400
+Viewed pricing,6800
+Started trial,3100
+Activated,1900
+Paid,860`,
 }
 
 export const chartTypeLabels: Record<ChartType, string> = {
@@ -111,6 +117,7 @@ export const chartTypeLabels: Record<ChartType, string> = {
   interactive: "Interactive Area Chart",
   waterfall: "Waterfall Chart",
   heatmap: "Heatmap",
+  funnel: "Funnel Chart",
 }
 
 export const chartTypeDescriptions: Record<ChartType, string> = {
@@ -127,6 +134,7 @@ export const chartTypeDescriptions: Record<ChartType, string> = {
   interactive: "Daily time series with 7/30/90-day range buttons and a drag-to-zoom brush.",
   waterfall: "Walk a starting value through increases and decreases to a final total.",
   heatmap: "A value grid shaded by intensity, e.g. cohort retention or activity by day and hour.",
+  funnel: "Show how many users reach each stage, with conversion and drop-off between steps.",
 }
 
 export const chartTypes: ChartType[] = [
@@ -143,6 +151,7 @@ export const chartTypes: ChartType[] = [
   "interactive",
   "waterfall",
   "heatmap",
+  "funnel",
 ]
 
 function toCamelCase(value: string): string {

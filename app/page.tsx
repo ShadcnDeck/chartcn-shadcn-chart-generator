@@ -35,9 +35,9 @@ import { GITHUB_URL } from "@/lib/seo";
 const features = [
   {
     icon: LayoutGrid,
-    title: "13 chart types built in",
+    title: "14 chart types built in",
     description:
-      "Bar, Horizontal Bar, Line, Area, Combo, Pie/Donut, Radar, Scatter, Radial/Gauge, KPI Sparkline cards, Interactive Area, Waterfall, and Heatmap.",
+      "Bar, Horizontal Bar, Line, Area, Combo, Pie/Donut, Radar, Scatter, Radial/Gauge, KPI Sparkline cards, Interactive Area, Waterfall, Heatmap, and Funnel.",
   },
   {
     icon: Terminal,
@@ -137,7 +137,7 @@ export default function Home() {
 
             <p className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:fill-mode-both max-w-2xl text-lg text-balance text-muted-foreground duration-700 delay-[160ms]">
               An open source shadcn/ui chart component library and generator.
-              Paste a CSV or JSON, preview 13 chart types, then copy the code or
+              Paste a CSV or JSON, preview 14 chart types, then copy the code or
               install it with one shadcn CLI command. No config, no account.
             </p>
 
@@ -265,20 +265,18 @@ export default function Home() {
                         Copy a chart into your project
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        Open any chart below, paste your own data, then hit{" "}
+                        Open any chart, paste your data, and hit{" "}
                         <span className="font-medium text-foreground">
                           Copy component
-                        </span>{" "}
-                        and drop the code into a file in your app. Or click{" "}
+                        </span>
+                        .
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Prefer the CLI? Click{" "}
                         <span className="font-medium text-foreground">
                           Get install command
                         </span>{" "}
-                        for one{" "}
-                        <code className="font-mono text-foreground">
-                          shadcn add
-                        </code>{" "}
-                        command that adds the chart, the chart primitive, and
-                        Recharts for you, so you can skip steps 1 and 2.
+                        instead. It covers steps 1 and 2 for you.
                       </p>
                     </div>
                   </CardContent>
@@ -309,7 +307,7 @@ export default function Home() {
             <p className="max-w-2xl text-muted-foreground">
               Most chart libraries hand you a black box: a new dependency with
               its own design system that never quite matches your app. ChartCN
-              skips that trade-off. Paste a CSV, pick from 13 chart types, and
+              skips that trade-off. Paste a CSV, pick from 14 chart types, and
               copy a self-contained TSX component built on shadcn/ui and
               Recharts, the same primitives your project likely already uses.
               No new dependency, no account to create, and the code is yours to

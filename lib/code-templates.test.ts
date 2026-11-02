@@ -325,3 +325,38 @@ describe("generateComponentCode: interactive, waterfall, heatmap", () => {
     expect(code).toContain('role="row"')
   })
 })
+
+describe("generateComponentCode: funnel", () => {
+  const funnelData = parseCSV("Stage,Users\nVisit,1000\nSignup,400\nPaid,100")
+
+  it("renders a dependency-free funnel that computes stages from live data", () => {
+    const code = generateComponentCode("funnel", funnelData, { exportMode: "props" })
+    expect(code).not.toContain("recharts")
+    expect(code).toContain('import { useState } from "react"')
+    expect(code).toContain("function toStages(rows: ChartRow[]): Stage[]")
+    expect(code).toContain('typeof row.Users === "number"')
+    expect(code).toContain("clipPath: trapezoid(stage.share, stages[index + 1]?.share ?? stage.share)")
+    expect(code).toContain("<Dropoff stage={stage} />")
+    expect(code).toContain("const conversion = index === 0 ? 1 : stage.fromPrevious")
+    expect(code).toContain("No stage values to chart yet")
+  })
+
+  it("switches to bars, overall conversion, and palette colors, and can drop the drop-off", () => {
+    const code = generateComponentCode("funnel", funnelData, {
+      funnelShape: "bars",
+      funnelRate: "first",
+      funnelColors: "palette",
+      showDropoff: false,
+    })
+    expect(code).toContain('<div className="flex h-11 justify-center rounded-lg bg-muted">')
+    expect(code).not.toContain("trapezoid(")
+    expect(code).toContain("const conversion = index === 0 ? 1 : stage.fromFirst")
+    expect(code).toContain('const stageColors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)"]')
+    expect(code).not.toContain("Dropoff")
+  })
+
+  it("bakes a custom gradient color", () => {
+    const code = generateComponentCode("funnel", funnelData, { customColors: { funnel: "#ff0000" } })
+    expect(code).toContain('const funnelColor = "#ff0000"')
+  })
+})

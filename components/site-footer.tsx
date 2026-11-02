@@ -87,7 +87,7 @@ export function SiteFooter() {
             <p className="text-sm font-[665] text-foreground">Shadcn/ui charts, CSV in, chart out</p>
             <p className="max-w-72 text-sm text-muted-foreground">
               Free, open source CSV to chart generator for shadcn/ui and React. Paste a CSV,
-              preview 13 chart types, then copy the code.
+              preview 14 chart types, then copy the code.
             </p>
             <a
               href={`mailto:${SUPPORT_EMAIL}`}

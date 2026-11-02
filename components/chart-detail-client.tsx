@@ -31,9 +31,11 @@ import {
   toScatterGroups,
 } from "@/lib/chart-data"
 import {
+  FUNNEL_KEY,
   HEAT_KEY,
   TIME_RANGES,
   WATERFALL_KINDS,
+  computeFunnel,
   heatColor,
   waterfallColor,
 } from "@/lib/chart-models"
@@ -116,6 +118,22 @@ export function ChartDetail({ type, shareParam }: { type: ChartType; shareParam:
     if (type === "heatmap") {
       return [{ key: HEAT_KEY, label: "Heat color", color: heatColor(options.customColors) }]
     }
+    if (type === "funnel") {
+      if ((options.funnelColors ?? "gradient") === "gradient") {
+        return [
+          {
+            key: FUNNEL_KEY,
+            label: "Funnel color",
+            color: resolveColor(FUNNEL_KEY, 0, options.customColors),
+          },
+        ]
+      }
+      return computeFunnel(data).map((stage, index) => ({
+        key: stage.label,
+        label: stage.label,
+        color: resolveColor(stage.label, index, options.customColors),
+      }))
+    }
     if (type === "scatter") {
       return toScatterGroups(data, options.customColors).map(({ key, label, color }) => ({
         key,
@@ -129,7 +147,7 @@ export function ChartDetail({ type, shareParam }: { type: ChartType; shareParam:
       label: series.label,
       color: resolveColor(series.key, index, options.customColors),
     }))
-  }, [type, data, options.customColors])
+  }, [type, data, options.customColors, options.funnelColors])
 
   const kpiExport = useMemo(() => {
     if (type !== "kpi") return undefined
@@ -558,6 +576,51 @@ function ChartVariantToggles({
               )
             }
           />
+        </ControlGroup>
+      </div>
+    )
+  }
+
+  if (type === "funnel") {
+    return (
+      <div className="flex flex-wrap items-end gap-4">
+        <ControlGroup label="Shape">
+          <Segmented
+            value={options.funnelShape ?? "funnel"}
+            items={[
+              { value: "funnel", label: "Funnel" },
+              { value: "bars", label: "Bars" },
+            ]}
+            onChange={(funnelShape) => onChange({ ...options, funnelShape })}
+          />
+        </ControlGroup>
+        <ControlGroup label="Conversion">
+          <Segmented
+            value={options.funnelRate ?? "previous"}
+            items={[
+              { value: "previous", label: "Step" },
+              { value: "first", label: "Overall" },
+            ]}
+            onChange={(funnelRate) => onChange({ ...options, funnelRate })}
+          />
+        </ControlGroup>
+        <ControlGroup label="Colors">
+          <Segmented
+            value={options.funnelColors ?? "gradient"}
+            items={[
+              { value: "gradient", label: "Gradient" },
+              { value: "palette", label: "Palette" },
+            ]}
+            onChange={(funnelColors) => onChange({ ...options, funnelColors })}
+          />
+        </ControlGroup>
+        <ControlGroup label="Show">
+          <Toggle
+            pressed={options.showDropoff ?? true}
+            onPressedChange={(showDropoff) => onChange({ ...options, showDropoff })}
+          >
+            Drop-off
+          </Toggle>
         </ControlGroup>
       </div>
     )

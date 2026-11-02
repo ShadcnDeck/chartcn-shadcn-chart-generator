@@ -22,7 +22,7 @@ export const faqs: Faq[] = [
   {
     question: "What chart types are supported?",
     answer:
-      "ChartCN supports 13 chart types: Bar, Horizontal Bar, Line, Area, Combo (bar and line together), Pie/Donut, Radar, Scatter, Radial/Gauge, KPI Sparkline cards, Interactive Area, Waterfall, and Heatmap. Each one comes with its own variant toggles, like stacked or grouped bars, sorted bars, smooth lines, donut style, or a half gauge.",
+      "ChartCN supports 14 chart types: Bar, Horizontal Bar, Line, Area, Combo (bar and line together), Pie/Donut, Radar, Scatter, Radial/Gauge, KPI Sparkline cards, Interactive Area, Waterfall, Heatmap, and Funnel. Each one comes with its own variant toggles, like stacked or grouped bars, sorted bars, smooth lines, donut style, a half gauge, or funnel conversion rates.",
   },
   {
     question: "What format should my CSV be in?",

@@ -14,5 +14,5 @@ export const GITHUB_URL = `${GITHUB_ORG_URL}/chartcn-shadcn-chart-generator`
  * its newest release date. */
 export const PAGE_UPDATED = {
   home: "2026-11-02",
-  charts: "2026-09-25",
+  charts: "2026-11-03",
 }

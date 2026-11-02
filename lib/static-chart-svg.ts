@@ -21,10 +21,14 @@ import {
   toScatterGroups,
 } from "@/lib/chart-data"
 import {
+  FUNNEL_KEY,
   WATERFALL_KINDS,
+  computeFunnel,
   computeHeatmap,
   computeWaterfall,
   formatHeatValue,
+  formatRate,
+  funnelMix,
   heatColor,
   heatIntensity,
   heatMix,
@@ -40,11 +44,14 @@ const THEMES = {
   light: {
     background: "#fcfcfb",
     foreground: "#0b0b0b",
-    muted: "#6b6a65",
+    muted: "#52514c",
     grid: "rgba(11,11,11,0.1)",
     track: "#f0efec",
     positive: "#059669",
     negative: "#dc2626",
+    // Funnel drop-off / growth text: Tailwind amber-700 / emerald-700.
+    dropoff: "#b45309",
+    gain: "#047857",
     palette: ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4"],
   },
   dark: {
@@ -55,6 +62,9 @@ const THEMES = {
     track: "#242422",
     positive: "#34d399",
     negative: "#f87171",
+    // Tailwind amber-400 / emerald-400.
+    dropoff: "#fbbf24",
+    gain: "#34d399",
     palette: ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181"],
   },
 } as const
@@ -986,6 +996,85 @@ function heatmap(data: ParsedChartData, options: ChartOptions, frame: Frame): st
   return parts.join("")
 }
 
+// ---------------------------------------------------------------- funnel
+
+function funnel(data: ParsedChartData, options: ChartOptions, frame: Frame): string {
+  const { width, height, theme } = frame
+  const stages = computeFunnel(data)
+  if (stages.every((stage) => stage.value === 0)) {
+    return text(width / 2, height / 2, "No data", { fill: theme.muted, "font-size": 14, "text-anchor": "middle" })
+  }
+  const shape = options.funnelShape ?? "funnel"
+  const rate = options.funnelRate ?? "previous"
+  const showDropoff = options.showDropoff ?? true
+  const palette = (options.funnelColors ?? "gradient") === "palette"
+  const base = toColor(resolveColor(FUNNEL_KEY, 0, options.customColors), 0, theme)
+
+  const values = stages.map((stage) => stage.value.toLocaleString("en-US"))
+  const conversions = stages.map((stage, i) => (i === 0 ? 1 : rate === "first" ? stage.fromFirst : stage.fromPrevious))
+  const nameWidth = Math.min(140, Math.max(...stages.map((s) => textWidth(s.label, 13)))) + 12
+  const numberWidth = Math.max(...values.map((v) => textWidth(v, 13)), 72) + 8
+  const left = PAD + nameWidth
+  const right = width - PAD - numberWidth - 12
+  const top = frame.top + 8
+  const bottom = height - PAD - 26
+  const gap = 4
+  const rowH = Math.min(48, (bottom - top - gap * (stages.length - 1)) / stages.length)
+  const cx = (left + right) / 2
+  const half = (share: number) => (Math.max(share, 0.02) * (right - left)) / 2
+
+  const parts: string[] = []
+  stages.forEach((stage, i) => {
+    const y = top + i * (rowH + gap)
+    const color = palette ? toColor(resolveColor(stage.label, i, options.customColors), i, theme) : base
+    const opacity = palette ? 1 : funnelMix(i, stages.length) / 100
+    if (shape === "bars") {
+      parts.push(
+        `<rect x="${r2(left)}" y="${r2(y)}" width="${r2(right - left)}" height="${r2(rowH)}" rx="8" fill="${theme.track}"/>`,
+        `<rect x="${r2(cx - half(stage.share))}" y="${r2(y)}" width="${r2(half(stage.share) * 2)}" height="${r2(rowH)}" rx="8" fill="${color}" fill-opacity="${opacity}"/>`
+      )
+    } else {
+      const t = half(stage.share)
+      const b = half(stages[i + 1]?.share ?? stage.share)
+      parts.push(
+        `<path d="M${r2(cx - t)} ${r2(y)}H${r2(cx + t)}L${r2(cx + b)} ${r2(y + rowH)}H${r2(cx - b)}Z" fill="${color}" fill-opacity="${opacity}"/>`
+      )
+    }
+    const mid = y + rowH / 2
+    parts.push(text(PAD, mid + 4, stage.label, { fill: theme.muted, "font-size": 13, "font-weight": 500 }))
+    const numX = width - PAD
+    parts.push(
+      text(numX, mid - 2, values[i], { fill: theme.foreground, "font-size": 13, "font-weight": 500, "text-anchor": "end" })
+    )
+    const conversion = conversions[i]
+    const change = showDropoff && stage.fromPrevious !== null && stage.fromPrevious !== 1 ? stage.fromPrevious - 1 : null
+    const changeText = change === null ? "" : `${change < 0 ? "−" : "+"}${formatRate(Math.abs(change))}`
+    const rateText = conversion === null ? "–" : formatRate(conversion)
+    if (changeText) {
+      parts.push(
+        text(numX, mid + 13, changeText, { fill: change! < 0 ? theme.dropoff : theme.gain, "font-size": 11, "text-anchor": "end" }),
+        text(numX - textWidth(changeText, 11) - 6, mid + 13, rateText, { fill: theme.muted, "font-size": 11, "text-anchor": "end" })
+      )
+    } else {
+      parts.push(text(numX, mid + 13, rateText, { fill: theme.muted, "font-size": 11, "text-anchor": "end" }))
+    }
+  })
+
+  const footY = top + stages.length * (rowH + gap) + 14
+  parts.push(text(PAD, footY, `% of ${rate} stage`, { fill: theme.muted, "font-size": 12 }))
+  const overall = stages.length > 1 ? stages[stages.length - 1].fromFirst : null
+  if (overall !== null) {
+    parts.push(
+      text(width - PAD, footY, `Overall conversion ${formatRate(overall)}`, {
+        fill: theme.muted,
+        "font-size": 12,
+        "text-anchor": "end",
+      })
+    )
+  }
+  return parts.join("")
+}
+
 // ---------------------------------------------------------------- entry
 
 export const DEFAULT_SIZES: Partial<Record<ChartType, { width: number; height: number }>> = {
@@ -994,6 +1083,7 @@ export const DEFAULT_SIZES: Partial<Record<ChartType, { width: number; height: n
   radial: { width: 480, height: 440 },
   kpi: { width: 480, height: 240 },
   heatmap: { width: 640, height: 360 },
+  funnel: { width: 640, height: 360 },
 }
 
 export function renderStaticChartSvg(
@@ -1047,6 +1137,9 @@ export function renderStaticChartSvg(
         break
       case "heatmap":
         body = heatmap(data, chartOptions, frame)
+        break
+      case "funnel":
+        body = funnel(data, chartOptions, frame)
         break
       default: {
         const exhaustive: never = type
